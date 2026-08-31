@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pipes-source-goal.schema.json",
+  "title": "Pipes START-to-GOAL problem v2",
+  "type": "object",
+  "required": ["schema_version", "puzzle_type", "generator_version", "width", "height", "source", "sink", "initial_masks", "ruleset"],
+  "properties": {
+    "schema_version": {"const": "1.1.0"},
+    "puzzle_type": {"const": "pipes"},
+    "generator_version": {"const": "pipes-gen-2"},
+    "ruleset": {"const": "source-to-goal-v2"},
+    "width": {"type": "integer", "minimum": 3, "maximum": 5},
+    "height": {"type": "integer", "minimum": 3, "maximum": 5},
+    "source": {"type": "array", "prefixItems": [{"type": "integer"}, {"type": "integer"}], "minItems": 2, "maxItems": 2},
+    "sink": {"type": "array", "prefixItems": [{"type": "integer"}, {"type": "integer"}], "minItems": 2, "maxItems": 2},
+    "initial_masks": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": 15}}
+  }
+}

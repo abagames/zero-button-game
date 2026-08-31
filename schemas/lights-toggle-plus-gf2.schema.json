@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lights-toggle-plus-gf2.schema.json",
+  "title": "Lights Out problem (toggle-plus, GF(2) unique press set) v1",
+  "type": "object",
+  "required": ["schema_version", "puzzle_type", "generator_version", "width", "height", "initial", "ruleset"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "puzzle_type": {"const": "lights"},
+    "generator_version": {"const": "lights-gen-1"},
+    "ruleset": {"const": "toggle-plus-gf2-v1"},
+    "width": {
+      "const": 5,
+      "description": "board width; only the 5x4 shape has a full-column-rank toggle matrix"
+    },
+    "height": {
+      "const": 4,
+      "description": "board height; 4x4 and 5x5 have nullity 4 and 2 and can never be unique"
+    },
+    "initial": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "description": "row-major light vector; 1 is lit, 0 is unlit. The goal is the all-ones vector.",
+      "items": {"type": "integer", "enum": [0, 1]}
+    }
+  },
+  "additionalProperties": false,
+  "$comment": "Action contract: kind is \"toggle_cell\", actor_id is \"cell-<x>-<y>\", params is {\"cell\": [x, y]} - a dict[str, list[int]], within plugin protocol v1's Action shape. Pressing a cell toggles that cell and its in-bounds orthogonal neighbours. Presses commute and are involutive, so a solution is a set of cells; the unique press set is the GF(2) solution of A s = initial XOR all-ones, proven unique by nullity 0."
+}

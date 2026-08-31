@@ -1,0 +1,47 @@
+{
+  "board": {
+    "hole_cell_px": 96,
+    "hole_grid_height": 3,
+    "hole_grid_width": 4,
+    "max_tray_width_cells": 9,
+    "tray_cell_px": 60
+  },
+  "difficulty": "easy",
+  "generation": {
+    "piece_count": 3,
+    "piece_family": "connected 3- or 4-cell polyominoes inside a 3x2 box, fixed orientation",
+    "search_attempts": 400,
+    "solve_node_budget": 200000,
+    "strategy": "random-tiling-then-uniqueness-screen"
+  },
+  "human": {
+    "status": "uncalibrated-packing-v1"
+  },
+  "mechanical": {
+    "concave_pieces_min": 1,
+    "dead_placements_min": 0,
+    "difficulty_score": [
+      46,
+      62
+    ],
+    "pieces": [
+      3,
+      3
+    ]
+  },
+  "name": "packing-easy",
+  "presentation": {
+    "calibration_status": "uncalibrated-packing-v1",
+    "note": "thinking time set to 4.0s by the 2026-08-23 single-evaluator round-3 sweep (2.5/4.0/6.0s)",
+    "thinking_time_definition": "frame zero to reveal_start",
+    "thinking_time_seconds": 4.0,
+    "source_evaluation": "studies/timing_sweep_round3_calibration_2026-08-23.json"
+  },
+  "puzzle_type": "packing",
+  "ruleset": "exact-cover-norotate-v1",
+  "schema_version": "1.0.0",
+  "uniqueness": {
+    "cover_count": 1,
+    "equivalence_policy_version": "packing-shape-anchor-cover-v1"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "metadata.schema.json",
+  "title": "Zero Button Game metadata v1",
+  "type": "object",
+  "required": ["schema_version", "instance_id", "puzzle", "provenance", "solution", "difficulty", "timeline", "presentation", "artifacts", "validation"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "instance_id": {"type": "string"},
+    "puzzle": {"type": "object"},
+    "provenance": {"type": "object"},
+    "solution": {"type": "object"},
+    "difficulty": {"type": "object"},
+    "timeline": {"type": "object"},
+    "presentation": {"type": "object"},
+    "artifacts": {"type": "array", "minItems": 2},
+    "validation": {"type": "object"}
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "difficulty": "target",
+  "generation": {
+    "action_kind": "fold_along",
+    "colour_count": "equal to the target rectangle's area (overlap is forbidden, so it is not a free knob)",
+    "max_folds": 4,
+    "min_folds": 4,
+    "min_target_side": 2,
+    "search_attempts": 240,
+    "strategy": "backwards: pick the fold class first, then colour exactly one source cell per target cell, then keep the colourings that exactly one class reaches"
+  },
+  "human": {
+    "status": "uncalibrated-fold-v1"
+  },
+  "mechanical": {
+    "both_axes_required": true,
+    "decoy_creases_max": 80,
+    "difficulty_score": [
+      450,
+      620
+    ],
+    "folds": [
+      4,
+      4
+    ],
+    "no_overlapping_colour": true
+  },
+  "name": "fold-target",
+  "presentation": {
+    "calibration_status": "calibrated-within-person-timing-only",
+    "note": "folding the smaller side onto the larger keeps the sheet rectangular; folds on different axes commute, so uniqueness is judged over commutation classes and the animation plays the canonical order (vertical creases first). coloured cells may never stack, so the colour count always equals the target's area and the still frame shows whether the target is the right size. thinking time set to 6.0s by the 2026-08-24 single-evaluator round-5 sweep (target 4.0/6.0/8.0s, easy and medium 2.5/4.0/6.0s) on the fold-to-target-exact-v1 ruleset",
+    "source_evaluation": "studies/timing_sweep_round5_fold_calibration_2026-08-24.json",
+    "thinking_time_definition": "frame zero to reveal_start",
+    "thinking_time_seconds": 6.0
+  },
+  "puzzle_type": "fold",
+  "ruleset": "fold-to-target-exact-v1",
+  "schema_version": "1.0.0",
+  "sheet": {
+    "cell_px": 68,
+    "height": 6,
+    "mini_cell_px": 38,
+    "shape_note": "a 6x6 sheet gives 12 legal creases when flat and still shrinks to a readable 2-6 cell target within four folds",
+    "width": 6
+  },
+  "uniqueness": {
+    "equivalence_policy_version": "fold-crease-class-v1",
+    "fold_class_count": 1,
+    "proof": "complete-fold-class-enumeration"
+  }
+}

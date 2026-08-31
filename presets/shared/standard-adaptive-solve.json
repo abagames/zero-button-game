@@ -1,0 +1,1 @@
+{"base_preset":"standard","formula":"solve_duration=max(2.0,min(4.0,solution_cost*2/fps))","max_total_duration":8.0,"min_frames_per_action":2,"name":"standard-adaptive-solve"}

@@ -1,0 +1,50 @@
+{
+  "board": {
+    "cell_px": 96,
+    "height": 4,
+    "mini_cell_px": 32,
+    "shape_note": "5x4 is used because its toggle matrix has full column rank (nullity 0); 4x4 and 5x5 have nullity 4 and 2 and can never be unique",
+    "width": 5
+  },
+  "difficulty": "target",
+  "generation": {
+    "action_kind": "toggle_cell",
+    "press_count": 4,
+    "search_attempts": 2000,
+    "strategy": "press-k-cells-from-all-lit-then-quality-screen"
+  },
+  "human": {
+    "status": "uncalibrated-lights-v1"
+  },
+  "mechanical": {
+    "board_symmetries": "rejected",
+    "difficulty_score": [
+      154,
+      220
+    ],
+    "greedy_reduction_max": 5,
+    "lit_clusters_min": 3,
+    "presses": [
+      4,
+      4
+    ]
+  },
+  "name": "lights-target",
+  "presentation": {
+    "calibration_status": "uncalibrated-lights-v1",
+    "note": "pressing a cell toggles it and its orthogonal neighbours; presses commute; |S| bands re-cut to 2/3/4 and thinking time set to 8.0s, supported on both the press-count axis (round 2) and the time axis (round 3) of the 2026-08-23 single-evaluator sweeps",
+    "thinking_time_definition": "frame zero to reveal_start",
+    "thinking_time_seconds": 8.0,
+    "source_evaluation": "studies/timing_sweep_round3_calibration_2026-08-23.json"
+  },
+  "puzzle_type": "lights",
+  "ruleset": "toggle-plus-gf2-v1",
+  "schema_version": "1.0.0",
+  "uniqueness": {
+    "equivalence_policy_version": "lights-press-set-gf2-v1",
+    "nullity": 0,
+    "press_set_count": 1,
+    "proof": "gf2-full-column-rank",
+    "rank": 20
+  }
+}

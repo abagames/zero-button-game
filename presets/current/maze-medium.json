@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "puzzle_type": "maze",
+  "ruleset": "perfect-maze-v1",
+  "difficulty": "medium",
+  "max_cost": 26,
+  "max_decisions": 5,
+  "max_deep_false_leads": 5,
+  "max_false_leads": 5,
+  "min_cost": 20,
+  "min_decisions": 3,
+  "min_deep_false_leads": 2,
+  "min_false_leads": 3,
+  "min_goal_zone_false_leads": 1,
+  "name": "maze-medium",
+  "presentation": {
+    "thinking_time_seconds": 2.5,
+    "thinking_time_definition": "frame zero to reveal_start",
+    "note": "thinking time kept at the 2.5s baseline by the 2026-08-23 single-evaluator round-3 sweep (2.5/4.0/6.0s)",
+    "source_evaluation": "studies/timing_sweep_round3_calibration_2026-08-23.json",
+    "calibration_status": "calibrated-within-person-timing-only"
+  }
+}

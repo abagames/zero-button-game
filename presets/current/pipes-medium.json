@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.2.0",
+  "name": "pipes-medium",
+  "puzzle_type": "pipes",
+  "ruleset": "source-to-goal-unique-v3",
+  "difficulty": "medium",
+  "board": {
+    "width": 4,
+    "height": 4
+  },
+  "mechanical": {
+    "required_path_length_min": 7,
+    "required_rotation_pieces_min": 2,
+    "required_quarter_turns": [3, 10],
+    "candidate_routes_min": 2,
+    "difficulty_score": [23, 31]
+  },
+  "uniqueness": {
+    "normalized_solution_count": 1,
+    "unique_path_count": 1,
+    "equivalence_policy_version": "pipes-normalized-minimum-v1"
+  },
+  "human": {
+    "status": "uncalibrated-pipes-unique-v3"
+  },
+  "presentation": {
+    "thinking_time_seconds": 6.0,
+    "thinking_time_definition": "frame zero to reveal_start",
+    "note": "thinking time set to 4.0s by the 2026-08-23 single-evaluator round-3 sweep (2.5/4.0/6.0s)",
+    "source_evaluation": "studies/timing_sweep_round3_calibration_2026-08-23.json",
+    "calibration_status": "calibrated-within-person-timing-only"
+  }
+}

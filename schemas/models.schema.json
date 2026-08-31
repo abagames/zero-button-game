@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "models.schema.json",
+  "title": "Zero Button Game logical documents",
+  "type": "object",
+  "oneOf": [
+    {"required": ["schema_version", "puzzle_type", "generator_version", "width", "height", "start", "goal", "edges"]},
+    {"required": ["schema_version", "puzzle_type", "generator_version", "width", "height", "source", "sink", "initial_masks", "ruleset"]},
+    {"required": ["schema_version", "solver_id", "solver_version", "optimality", "actions", "initial_state_hash", "final_state_hash"]},
+    {"required": ["schema_version", "policy", "source_solution_hash", "logical_steps", "timeline", "visual_cues"]}
+  ]
+}

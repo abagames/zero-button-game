@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0.0",
+  "name": "parking-target",
+  "puzzle_type": "parking",
+  "ruleset": "rush-hour-slide-v1",
+  "difficulty": "target",
+  "board": {
+    "width": 6,
+    "height": 6,
+    "exit_side": "east"
+  },
+  "presentation": {
+    "thinking_time_seconds": 8.0,
+    "thinking_time_definition": "frame zero to reveal_start",
+    "calibration_status": "uncalibrated-parking-v1",
+    "note": "thinking time raised to 8.0s by the 2026-08-23 single-evaluator sweep; structural difficulty remains uncalibrated",
+    "source_evaluation": "studies/timing_sweep_round2_calibration_2026-08-23.json"
+  },
+  "generation": {
+    "strategy": "reverse-walk-from-cleared-board",
+    "vehicle_count": 13,
+    "walk_steps": 18,
+    "blocker_count": 2,
+    "search_attempts": 3000,
+    "solve_state_budget": 60000
+  },
+  "mechanical": {
+    "normalized_moves": [
+      6,
+      7
+    ],
+    "involved_vehicles_min": 6,
+    "blocking_chain_depth_min": 2,
+    "reversal_moves_min": 0,
+    "slide_cells_max": 16,
+    "difficulty_score": [
+      84,
+      130
+    ]
+  },
+  "uniqueness": {
+    "minimal_path_count": 1,
+    "equivalence_policy_version": "parking-normalized-minimum-v1"
+  },
+  "human": {
+    "status": "uncalibrated-parking-v1"
+  }
+}

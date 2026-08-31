@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pipes-solution-uniqueness.schema.json",
+  "title": "Normalized pipes solution uniqueness evidence",
+  "type": "object",
+  "required": ["status", "normalized_solution_count", "unique_path_count", "equivalence_policy", "equivalence_policy_version", "normalized_signature_hash", "path_identity_hash", "search"],
+  "properties": {
+    "status": {"const": "unique"},
+    "normalized_solution_count": {"const": 1},
+    "unique_path_count": {"const": 1},
+    "equivalence_policy_version": {"const": "pipes-normalized-minimum-v1"},
+    "normalized_signature_hash": {"type": "string", "pattern": "^sha256:"},
+    "path_identity_hash": {"type": "string", "pattern": "^sha256:"},
+    "normalized_signature": {
+      "type": "object",
+      "required": ["path_identity", "panels", "minimal_quarter_turn_cost", "normalized_signature_hash"],
+      "properties": {
+        "path_identity": {"type": "array", "minItems": 2},
+        "panels": {"type": "array"},
+        "minimal_quarter_turn_cost": {"type": "integer", "minimum": 0}
+      }
+    },
+    "search": {
+      "type": "object",
+      "required": ["node_budget", "search_nodes", "orientation_combinations", "feasible_geometric_paths", "near_optimal_path_count", "signature_limit"]
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "packing-exact-cover-norotate.schema.json",
+  "title": "Polyomino packing problem (exact cover, translation only) v1",
+  "type": "object",
+  "required": ["schema_version", "puzzle_type", "generator_version", "width", "height", "hole_cells", "pieces", "tray_slots", "ruleset"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "puzzle_type": {"const": "packing"},
+    "generator_version": {"const": "packing-gen-1"},
+    "ruleset": {"const": "exact-cover-norotate-v1"},
+    "width": {"type": "integer", "minimum": 3, "maximum": 5, "description": "hole grid width in cells"},
+    "height": {"type": "integer", "minimum": 3, "maximum": 4, "description": "hole grid height in cells"},
+    "hole_cells": {
+      "type": "array",
+      "minItems": 1,
+      "description": "the cells to be covered exactly once; a single connected region",
+      "items": {
+        "type": "array", "minItems": 2, "maxItems": 2,
+        "prefixItems": [{"type": "integer", "minimum": 0}, {"type": "integer", "minimum": 0}]
+      }
+    },
+    "pieces": {
+      "type": "array",
+      "minItems": 1,
+      "description": "fixed-orientation polyominoes; pieces translate only, never rotate or reflect",
+      "items": {
+        "type": "array", "minItems": 2, "maxItems": 2,
+        "prefixItems": [
+          {"type": "integer", "minimum": 0, "description": "piece id"},
+          {
+            "type": "array", "minItems": 3, "maxItems": 4,
+            "description": "normalized cells, sorted, inside a 3x2 bounding box",
+            "items": {
+              "type": "array", "minItems": 2, "maxItems": 2,
+              "prefixItems": [
+                {"type": "integer", "minimum": 0, "maximum": 2},
+                {"type": "integer", "minimum": 0, "maximum": 1}
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "tray_slots": {
+      "type": "array",
+      "minItems": 1,
+      "description": "per-piece tray column/row, one entry per piece in piece order",
+      "items": {
+        "type": "array", "minItems": 2, "maxItems": 2,
+        "prefixItems": [
+          {"type": "integer", "minimum": 0, "maximum": 9},
+          {"type": "integer", "minimum": 0, "maximum": 0}
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

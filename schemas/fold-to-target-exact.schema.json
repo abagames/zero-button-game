@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fold-to-target-exact.schema.json",
+  "title": "Paper folding problem (fold to a target rectangle, no overlapping colour, unique fold class) v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "puzzle_type",
+    "generator_version",
+    "width",
+    "height",
+    "filled",
+    "target",
+    "ruleset"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "puzzle_type": {
+      "const": "fold"
+    },
+    "generator_version": {
+      "const": "fold-gen-1"
+    },
+    "ruleset": {
+      "const": "fold-to-target-exact-v1"
+    },
+    "width": {
+      "const": 6,
+      "description": "sheet width in cells"
+    },
+    "height": {
+      "const": 6,
+      "description": "sheet height in cells"
+    },
+    "filled": {
+      "type": "array",
+      "minItems": 36,
+      "maxItems": 36,
+      "description": "row-major colouring of the flat sheet; 1 is coloured, 0 is blank. The number of coloured cells always equals the target rectangle's area, because coloured cells may never stack.",
+      "items": {
+        "type": "integer",
+        "enum": [
+          0,
+          1
+        ]
+      }
+    },
+    "target": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "target rectangle [x0, y0, x1, y1] in sheet cell coordinates, half-open; both sides are at least 2, it is never the whole sheet, and its area equals the number of coloured cells",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 6
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$comment": "Action contract: kind is \"fold_along\", actor_id is \"crease-<axis>-<line>\", params is {\"axis\": [0|1], \"line\": [k], \"dir\": [-1|+1]} - a dict[str, list[int]], within plugin protocol v1's Action shape. axis 0 is a vertical crease at x = line, axis 1 a horizontal crease at y = line. dir -1 folds the low side onto the high side, +1 the high side onto the low side; the moving side may never be the larger one, so the sheet stays rectangular and strictly shrinks. The moving half is reflected across the crease and lands above the whole stationary stack in reversed layer order. The goal is reached when the sheet outline equals target and every cell inside it is covered by exactly one coloured cell in its stack - coloured cells may never overlap. Folding maps the whole sheet inside the target, so a solvable problem carries exactly as many coloured cells as the target has cells, and a still frame therefore shows whether the target is the right size. Folds on different axes commute, so a solution is a class of sequences; the canonical representative folds every vertical crease first, then every horizontal crease, and uniqueness is proven by complete enumeration of that class space."
+}
