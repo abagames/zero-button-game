@@ -171,8 +171,8 @@ Mosaic Shiftは3×3の完成emblemを合法なrow / column循環shiftでscramble
 | 文書 | 役割 |
 |---|---|
 | このREADME | 利用者向けの生成・検証入口 |
+| [GAME_DESIGN.md](GAME_DESIGN.md) | ジャンルの適合条件、難易度、採用・校正仕様 |
 | [VISUAL_DESIGN.md](VISUAL_DESIGN.md) | 現行の視覚仕様 |
-| [FRAMEWORK_PROPOSAL.md](FRAMEWORK_PROPOSAL.md) | 将来のフレームワーク構想・改良案。現行仕様ではなく、実装済み・実装予定を示すものではない |
 
 ## 開発時の確認
 
