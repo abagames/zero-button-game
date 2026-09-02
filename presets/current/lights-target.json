@@ -18,20 +18,14 @@
   },
   "mechanical": {
     "board_symmetries": "rejected",
-    "difficulty_score": [
-      154,
-      220
-    ],
+    "difficulty_score": [154, 220],
     "greedy_reduction_max": 5,
     "lit_clusters_min": 3,
-    "presses": [
-      4,
-      4
-    ]
+    "presses": [4, 4]
   },
   "name": "lights-target",
   "presentation": {
-    "calibration_status": "uncalibrated-lights-v1",
+    "calibration_status": "calibrated-within-person-timing-only",
     "note": "pressing a cell toggles it and its orthogonal neighbours; presses commute; |S| bands re-cut to 2/3/4 and thinking time set to 8.0s, supported on both the press-count axis (round 2) and the time axis (round 3) of the 2026-08-23 single-evaluator sweeps",
     "thinking_time_definition": "frame zero to reveal_start",
     "thinking_time_seconds": 8.0,

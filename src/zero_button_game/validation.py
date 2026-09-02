@@ -94,9 +94,43 @@ ACCEPTED_TIMING_CALIBRATION_ROUNDS = (
                   ("fold", "medium", 6.0, 4.0, "studies/timing_sweep_round5_fold_calibration_2026-08-24.json"),
                   ("fold", "target", 6.0, 4.0, "studies/timing_sweep_round5_fold_calibration_2026-08-24.json"),
               )),
+            *(("lights", band, seconds, previous, "none-unvalidated-retiming-2026-09-02", "uncalibrated-standard-candidate", "candidate-pending-selection")
+              for band, seconds, previous in (("easy", 4.0, 6.0), ("medium", 6.0, 8.0))),
         )
     ),
 )
+
+
+def timing_calibration_status_matches(
+    calibration: dict, requested: float, puzzle_type: str | None, band: str | None,
+) -> bool:
+    """Accept current or historical declared timing records without rewriting history."""
+    timing_status = calibration.get("timing_status")
+    if timing_status in {
+        "candidate-pending-selection",
+        "calibrated-within-person-target",
+        "calibrated-within-person-timing-only",
+    }:
+        return any(
+            requested == round_["thinking_time_seconds"]
+            and puzzle_type == round_["puzzle_type"]
+            and band == round_["band"]
+            and calibration.get("previous_evaluated_thinking_time_seconds") == round_["previous"]
+            and calibration.get("target_standard_thinking_time_seconds") == round_["thinking_time_seconds"]
+            and calibration.get("calibration_status") == round_["calibration_status"]
+            and timing_status == round_["timing_status"]
+            and calibration.get("source_evaluation") == round_["source_evaluation"]
+            for round_ in ACCEPTED_TIMING_CALIBRATION_ROUNDS
+        )
+    if timing_status == "comparison-override-not-standard":
+        standard = calibration.get("target_standard_thinking_time_seconds")
+        return (
+            isinstance(standard, (int, float))
+            and not isinstance(standard, bool)
+            and standard > 0
+            and calibration.get("calibration_status") == "comparison-override-not-standard"
+        )
+    return False
 
 
 ARTIFACT_FILENAMES = {"gif": "animation.gif", "mp4": "preview.mp4"}
@@ -168,36 +202,9 @@ def validate_instance(instance: Path, strict: bool = True) -> dict:
             and calibration.get("problem_sha256") == metadata.get("puzzle", {}).get("problem_sha256")
             and calibration.get("solution_sha256") == metadata.get("solution", {}).get("solution_sha256")
         )
-        timing_status = calibration.get("timing_status")
         puzzle_type = metadata.get("puzzle", {}).get("type")
         band = metadata.get("difficulty", {}).get("accepted_band")
-        if timing_status == "candidate-pending-selection":
-            status_ok = True
-        elif timing_status in {"calibrated-within-person-target", "calibrated-within-person-timing-only"}:
-            # Every calibration round that has ever been the standard stays
-            # acceptable: works generated under a superseded round are historical
-            # records and must keep validating unchanged.
-            status_ok = any(
-                requested == round_["thinking_time_seconds"]
-                and puzzle_type == round_["puzzle_type"]
-                and band == round_["band"]
-                and calibration.get("previous_evaluated_thinking_time_seconds") == round_["previous"]
-                and calibration.get("target_standard_thinking_time_seconds") == round_["thinking_time_seconds"]
-                and calibration.get("calibration_status") == round_["calibration_status"]
-                and timing_status == round_["timing_status"]
-                and calibration.get("source_evaluation") == round_["source_evaluation"]
-                for round_ in ACCEPTED_TIMING_CALIBRATION_ROUNDS
-            )
-        elif timing_status == "comparison-override-not-standard":
-            standard = calibration.get("target_standard_thinking_time_seconds")
-            status_ok = (
-                isinstance(standard, (int, float))
-                and not isinstance(standard, bool)
-                and standard > 0
-                and calibration.get("calibration_status") == "comparison-override-not-standard"
-            )
-        else:
-            status_ok = False
+        status_ok = timing_calibration_status_matches(calibration, requested, puzzle_type, band)
         calibration_ok = common_calibration_ok and status_ok
         if calibration_ok:
             checks_passed.append("timing_calibration_metadata")

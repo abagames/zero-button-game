@@ -18,24 +18,18 @@
   },
   "mechanical": {
     "board_symmetries": "rejected",
-    "difficulty_score": [
-      118,
-      153
-    ],
+    "difficulty_score": [118, 153],
     "greedy_reduction_max": 6,
     "lit_clusters_min": 2,
-    "presses": [
-      3,
-      3
-    ]
+    "presses": [3, 3]
   },
   "name": "lights-medium",
   "presentation": {
-    "calibration_status": "uncalibrated-lights-v1",
-    "note": "pressing a cell toggles it and its orthogonal neighbours; presses commute; |S| bands re-cut to 2/3/4 and thinking time set to 8.0s, supported on both the press-count axis (round 2) and the time axis (round 3) of the 2026-08-23 single-evaluator sweeps",
+    "calibration_status": "uncalibrated-standard-candidate",
+    "note": "6.0s was selected on 2026-09-02 as an uncalibrated candidate default; no human timing evaluation supports this retiming; the 2/3/4 press-count bands are unchanged and historical 8.0s metadata remains valid",
     "thinking_time_definition": "frame zero to reveal_start",
-    "thinking_time_seconds": 8.0,
-    "source_evaluation": "studies/timing_sweep_round3_calibration_2026-08-23.json"
+    "thinking_time_seconds": 6.0,
+    "source_evaluation": "none-unvalidated-retiming-2026-09-02"
   },
   "puzzle_type": "lights",
   "ruleset": "toggle-plus-gf2-v1",

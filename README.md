@@ -142,7 +142,7 @@ loaderは毎回JSONを読み直し、実際にparseしたsource bytesのSHA-256�
 
 - **既存 `output/` を上書きしない。** 同一instanceは既定で `OUTPUT_CONFLICT` になります。再現検査も別の新規outputへ生成してください。単体の `--force` は既存instanceを `output/superseded/` へ退避しますが、通常運用では新規runを推奨します。sequenceに `--force` はありません。
 - **標準外thinking timeは比較条件。** `--thinking-time` は2.5〜20.0秒の20fps格子で全plugin / bandに指定できます。JSON標準と異なる値は `comparison-override-not-standard` と記録され、標準作品ではありません。正本生成ではoverrideを省略してください。
-- **一般利用者校正は未実施。** thinking timeは単独評価者の個人内標準です。構造難易度にも未校正bandがあり、sequence全体、title、countdown、HARD理解、音量・音の識別性は一般利用者未評価です。
+- **一般利用者校正は未実施。** 既存種のthinking timeには単独評価者の個人内標準が含まれます。LightsのEasy 4.0秒 / Medium 6.0秒は2026-09-02に選んだ未校正候補で、Target 8.0秒だけが既存校正を維持します。構造難易度にも未校正bandがあり、sequence全体、title、countdown、HARD理解、音量・音の識別性は一般利用者未評価です。
 - **difficulty scoreは種間比較不可。** score式とrangeはpluginごとに独立しています。
 - **`_full` は解答を含む。** 公開・評価時は通常 `contact_sheet.png` / `keyframes/` を使い、`*_full` を配布しないでください。
 - **`output/` は全体をGit管理外とする。** media、metadata、manifest、JSON / JSONL、一時stagingを含むローカル生成物はすべて `.gitignore` の対象です。再現性はseed、preset、コード、および `audit-quality` の標準出力などで担保します。
@@ -156,7 +156,7 @@ loaderは毎回JSONを読み直し、実際にparseしたsource bytesのSHA-256�
 | `pipes` | [`pipes-{easy,medium,target}.json`](presets/current/) | GIF / MP4 | MP4（音声あり／なし） | 4.0 / 6.0 / 8.0 |
 | `parking` | [`parking-{easy,medium,target}.json`](presets/current/) | GIF / MP4 | MP4（音声あり／なし） | 4.0 / 4.0 / 8.0 |
 | `packing` | [`packing-{easy,medium,target}.json`](presets/current/) | GIF / MP4 | MP4（音声あり／なし） | 4.0 / 4.0 / 8.0 |
-| `lights` | [`lights-{easy,medium,target}.json`](presets/current/) | GIF / MP4 | MP4（音声あり／なし） | 6.0 / 8.0 / 8.0 |
+| `lights` | [`lights-{easy,medium,target}.json`](presets/current/) | GIF / MP4 | MP4（音声あり／なし） | 4.0 / 6.0（未校正候補）/ 8.0（既存校正） |
 | `fold` | [`fold-{easy,medium,target}.json`](presets/current/) | GIF / MP4 | MP4（音声あり／なし） | 4.0 / 6.0 / 6.0 |
 
 内部band名は `easy` / `medium` / `target`、視聴者表示だけが `EASY` / `MEDIUM` / `HARD` です。単体は `--format gif` / `--format mp4` / `--format gif,mp4` で出力を選び、3問sequenceはMP4専用で `--audio on` / `--audio off` を選べます。

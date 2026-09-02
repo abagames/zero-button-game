@@ -648,11 +648,31 @@ class LightsPlugin:
     def timing_calibration_profile(band: str) -> dict | None:
         if band not in {"easy", "medium", "target"}:
             return None
-        previous = 6.5 if band == "target" else None
-        source = "studies/timing_sweep_round3_calibration_2026-08-23.json" if band == "target" else "studies/timing_sweep_round2_calibration_2026-08-23.json"
         standard = float(lights_difficulty_preset(band)["thinking_time_seconds"])
-        return _timing_profile("lights", band, standard=standard, previous=previous, source=source,
-                               structural_status=LightsPlugin.calibration_label(band))
+        if band == "target":
+            return _timing_profile(
+                "lights", band, standard=standard, previous=6.5,
+                source="studies/timing_sweep_round3_calibration_2026-08-23.json",
+                structural_status=LightsPlugin.calibration_label(band),
+            )
+        previous = {"easy": 6.0, "medium": 8.0}[band]
+        return {
+            "variant": f"lights-{band}-candidate-{_seconds_text(standard)}s",
+            "baseline_thinking_time_seconds": 2.5,
+            "previous_evaluated_thinking_time_seconds": previous,
+            "standard_thinking_time_seconds": standard,
+            "calibration_change": (
+                f"{_seconds_text(previous)}s prior calibrated standard -> "
+                f"{_seconds_text(standard)}s selected as an uncalibrated candidate default"
+            ),
+            "calibration_status": "uncalibrated-standard-candidate",
+            "source_evaluation": "none-unvalidated-retiming-2026-09-02",
+            "calibration_scope": (
+                f"Lights {band} presentation retiming; no human evaluation of the candidate default"
+            ),
+            "structural_difficulty_status": LightsPlugin.calibration_label(band),
+            "timing_status": "candidate-pending-selection",
+        }
 
     difficulty_preset = staticmethod(lights_difficulty_preset)
 

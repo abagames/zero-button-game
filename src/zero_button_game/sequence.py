@@ -18,7 +18,7 @@ from .pipeline import GenerationRequest, generate
 from .preset_loader import PresetRoots, use_preset_root
 from .registry import get_plugin
 from .render import ACTOR, BACKGROUND, FONT, GOAL, MUTED, PANEL, WHITE, _rect, _text, read_ppm
-from .validation import validate_instance
+from .validation import timing_calibration_status_matches, validate_instance
 
 
 SEQUENCE_BANDS = ("easy", "medium", "target")
@@ -733,7 +733,13 @@ def validate_sequence(sequence: Path, strict: bool = True) -> dict:
             component = read_json(instance / "metadata.json")
             component_mp4 = probe_media(instance / "preview.mp4")
             expected_seed = _band_seed(metadata["provenance"]["master_seed"], plugin_type, ordinal - 1, expected_band)
-            standard_thinking = float(get_plugin(plugin_type).difficulty_preset(expected_band)["thinking_time_seconds"])
+            timing_calibration = component.get("timing_calibration", {})
+            declared_standard_timing = (
+                timing_calibration.get("timing_status") != "comparison-override-not-standard"
+                and timing_calibration_status_matches(
+                    timing_calibration, item["thinking_time_seconds"], plugin_type, expected_band,
+                )
+            )
             component_ok = (
                 report["status"] == "passed"
                 and component["puzzle"]["type"] == plugin_type
@@ -743,7 +749,8 @@ def validate_sequence(sequence: Path, strict: bool = True) -> dict:
                 and component["instance_id"] == item["instance_id"]
                 and component["timeline"]["preset"] == item["preset"]
                 and component["timeline"]["problem_to_reveal_seconds"] == item["thinking_time_seconds"]
-                and item["thinking_time_seconds"] == standard_thinking
+                and item.get("timing_calibration_status") == timing_calibration.get("timing_status")
+                and declared_standard_timing
                 and component["timeline"]["total_frames"] == item["content_frames"] == item["component_frames"]
                 and component_mp4["sha256"] == item["component_mp4_sha256"]
             )

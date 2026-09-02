@@ -8,7 +8,7 @@ from zero_button_game.maze import MIXED_TRAIT_TARGETS, MazeRules, MazeSolver, di
 from zero_button_game.models import Action, PuzzleSpec, Solution, TimelineSpec
 from zero_button_game.pipeline import GenerationRequest, timeline_for_request
 from zero_button_game.registry import get_plugin
-from zero_button_game.validation import declared_formats
+from zero_button_game.validation import declared_formats, timing_calibration_status_matches
 
 
 class ContractTests(unittest.TestCase):
@@ -65,7 +65,7 @@ class ContractTests(unittest.TestCase):
             "pipes": {"easy": 4.0, "medium": 6.0, "target": 8.0},
             "parking": {"easy": 4.0, "medium": 4.0, "target": 8.0},
             "packing": {"easy": 4.0, "medium": 4.0, "target": 8.0},
-            "lights": {"easy": 6.0, "medium": 8.0, "target": 8.0},
+            "lights": {"easy": 4.0, "medium": 6.0, "target": 8.0},
             "fold": {"easy": 4.0, "medium": 6.0, "target": 6.0},
         }
         for puzzle_type, bands in standard_thinking_time.items():
@@ -88,7 +88,7 @@ class ContractTests(unittest.TestCase):
             ("pipes", "target"): "pipes-target-standard-8s-v1",
             ("parking", "medium"): "parking-medium-standard-4s-v1",
             ("packing", "target"): "packing-target-standard-8s-v1",
-            ("lights", "easy"): "lights-easy-standard-6s-v1",
+            ("lights", "easy"): "lights-easy-standard-4s-v1",
             ("fold", "target"): "fold-target-standard-6s-v1",
         }
         for (puzzle_type, band), label in expected.items():
@@ -99,6 +99,23 @@ class ContractTests(unittest.TestCase):
             self.assertEqual(plugin.timeline_preset_label(band, seconds, True), GENERIC_TIMELINE_PRESET_LABEL)
             # A non-standard duration falls back to the generic label.
             self.assertEqual(plugin.timeline_preset_label(band, seconds + 0.5, False), GENERIC_TIMELINE_PRESET_LABEL)
+
+    def test_historical_lights_6_8_8_timing_metadata_remains_accepted(self):
+        source_by_band = {
+            "easy": "studies/timing_sweep_round2_calibration_2026-08-23.json",
+            "medium": "studies/timing_sweep_round2_calibration_2026-08-23.json",
+            "target": "studies/timing_sweep_round3_calibration_2026-08-23.json",
+        }
+        for band, seconds, previous in (("easy", 6.0, None), ("medium", 8.0, None), ("target", 8.0, 6.5)):
+            calibration = {
+                "previous_evaluated_thinking_time_seconds": previous,
+                "target_standard_thinking_time_seconds": seconds,
+                "calibration_status": "calibrated-within-person-timing-only",
+                "timing_status": "calibrated-within-person-timing-only",
+                "source_evaluation": source_by_band[band],
+            }
+            with self.subTest(band=band):
+                self.assertTrue(timing_calibration_status_matches(calibration, seconds, "lights", band))
 
     def test_problem_and_solution_round_trip(self):
         self.assertEqual(PuzzleSpec.from_dict(self.puzzle.to_dict()), self.puzzle)
