@@ -1,0 +1,39 @@
+{
+  "board": {
+    "cell_px": 160,
+    "shape_note": "3x3 keeps every fragment large while allowing complete bounded shortest-path search through depth 8",
+    "size": 3
+  },
+  "difficulty": "easy",
+  "generation": {
+    "action_kind": "shift_line",
+    "search_attempts": 240,
+    "solve_node_budget": 362880,
+    "strategy": "choose a quality-controlled procedural emblem, apply legal cyclic row/column shifts, then solve and quality-screen"
+  },
+  "human": {"status": "uncalibrated-mosaic-v1"},
+  "mechanical": {
+    "both_axes_required": true,
+    "cross_axis_pairs_min": 1,
+    "difficulty_score": [55, 85],
+    "independent_line_repairs": "rejected",
+    "misplaced_tiles_min": 5,
+    "shortest_actions": [2, 2]
+  },
+  "name": "mosaic-easy",
+  "presentation": {
+    "calibration_status": "uncalibrated-initial-standard",
+    "note": "Initial 4.0s problem-to-reveal default; no human timing evaluation has been performed.",
+    "source_evaluation": "none-initial-default",
+    "thinking_time_definition": "frame zero to reveal_start",
+    "thinking_time_seconds": 4.0
+  },
+  "puzzle_type": "mosaic",
+  "ruleset": "row-column-cyclic-shift-v1",
+  "schema_version": "1.0.0",
+  "uniqueness": {
+    "equivalence_policy_version": "mosaic-exact-action-order-v1",
+    "proof": "bounded-complete-bfs-through-depth-8",
+    "shortest_path_count": 1
+  }
+}

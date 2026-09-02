@@ -1,6 +1,6 @@
 # Visual Design: Zero Button Game
 
-**文書の役割。** 本書は6種の**現行視覚仕様の正本**です。配色、layout、safe area、可読下限、frame 0、feedback、種別の受入意図を扱います。
+**文書の役割。** 本書は7種の**現行視覚仕様の正本**です。配色、layout、safe area、可読下限、frame 0、feedback、種別の受入意図を扱います。
 
 | 節  | 種      | 状態                                             |
 | --- | ------- | ------------------------------------------------ |
@@ -10,6 +10,7 @@
 | §4  | parking | 記載済み（2026-08-25 追加）                      |
 | §5  | packing | 記載済み（2026-08-25 追加）                      |
 | §6  | maze    | 記載済み（2026-08-25 追加）                      |
+| §7  | mosaic  | 記載済み（2026-09-01 追加）                      |
 
 共通契約（全種）: canvas 720×720、safe area (36, 36, 684, 684)、procedural RGB24 描画のみで外部 bitmap asset を使わない、frame 0 では盤面を描かない（fade `min(1.0, frame / appearance)`）、題字は fade 非適用。
 
@@ -369,3 +370,32 @@ frame 0 で盤を描かないのは、静止サムネとして frame 0 が無制
 - セル≥54px（現行範囲60〜108px）。壁5px、pathは進行中10px / 完成時7px（契約下限7px）。
 - reveal 前の全 frame は path を反転した alternate scene と pixel hash が一致し、reveal frame から異なる。
 - start / goal は二重円 / 菱形で識別でき、成功は amber のpathが両者を結ぶ現象として文字なしでも示される。
+
+## 7. mosaic（MOSAIC SHIFT）
+
+**正本**: `src/zero_button_game/mosaic_render.py` と `registry.MosaicPlugin.visual_contract` / `render_contract_checks`。
+
+### 7.1 Visual Concept と Layout
+
+「分断されたemblemを、3×3盤のrowまたはcolumn全体を循環shiftして復元する」。盤は (120, 112) 起点の480px角、1cell 160px、panel / `semantic_bounds` は (72, 78, 648, 656) である。safe area (36, 36, 684, 684) に対して左右36px、上42px、下28pxの余裕を持つ。品質管理されたprocedural vocabularyは `halo-diamond` / `four-petal-star` / `shield-knot` の3種で、外部bitmap assetを使わない。
+
+### 7.2 色・形・動き
+
+- tile面は青灰、emblem主線はaqua、副線と操作focusはamber。各tileは3px seamを持つ。
+- emblemは最低12px相当の太線、ring / diamond / petal / shield輪郭を組み合わせる。完成は色だけでなく線の連続、輪郭、対称形で読めるため `state_change_not_color_only: True`。
+- solve中はactive line全体を連続補間し、盤外へ出るfragmentを反対側から同時に描いてwrap-aroundを明示する。5px focus枠と矢印がaxis・line・directionを示す。
+- frame 0はfade 0で盤を隠し、題字だけを残す。THINK中は初期盤面と中立progressのみで、Action順を参照しない。
+- `CLEAR` と完成ringは最後のActionが完了した `solve_end` 以後にだけ現れる。transitionは左右から閉じるが、完全なblank frameにはしない。
+
+### 7.3 Difficulty / Quality と未校正事項
+
+Easy / Medium / targetの最短Action数は2 / 3 / 4。初期の2–3 / 3–5 / 5–8構成は短時間予測には重く、Medium 4手・target 6手の代表作を評価後に2 / 3 / 4へ再調整した。thinking timeはframe 0からrevealまで4.0 / 6.0 / 8.0秒を維持し、Action削減後の余裕を再評価する段階であり、人間のtiming校正はまだ行っていない。solverはdepth 8・362,880 node budgetのbounded BFSで最短depth、exact shortest path count、expanded nodesを記録する。`mosaic-exact-action-order-v1` では可換なAction順も別pathなので、採用候補はexact shortest pathが1本でなければならない。単一軸、交差のない独立line修正、少数misplaced fragment、既に完成した盤面は棄却する。
+
+### 7.4 Acceptance
+
+- canvas 720×720、cell 160px（下限144px）、盤・panelがsafe area内。
+- reveal前の全frameはAction順を巡回させたalternate sceneとpixel hash一致し、reveal frameでは不一致。
+- `shift_line` Actionのaxis / line / delta、各Action境界のtile state、wrap-around補間がsemantic snapshotと一致。
+- bounded BFSでexact shortest path countが1、両軸が交差し、独立line修正ではない。
+- 最後のshift前は `solved: False`、`solve_end` からのみ `solved: True` / `CLEAR`。
+- `emblem_complete` cueは `state_mutation: False` を宣言する。

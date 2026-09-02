@@ -14,6 +14,7 @@ EXPECTED_SCHEMA_FILENAMES = {
     "lights-toggle-plus-gf2.schema.json",
     "metadata.schema.json",
     "models.schema.json",
+    "mosaic-row-column-cyclic-shift.schema.json",
     "packing-exact-cover-norotate.schema.json",
     "parking-rush-hour-slide.schema.json",
     "pipes-solution-uniqueness.schema.json",

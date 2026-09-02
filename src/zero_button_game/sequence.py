@@ -32,7 +32,7 @@ TITLE_FRAMES = 30
 CARD_FRAMES = 18
 COUNTDOWN_STATE_FRAMES = 6
 FINAL_FRAMES = 20
-SEQUENCE_TYPES = ("maze", "pipes", "parking", "packing", "lights", "fold")
+SEQUENCE_TYPES = ("maze", "pipes", "parking", "packing", "lights", "fold", "mosaic")
 TITLE_SAFE_AREA = (60, 100, 660, 620)
 TITLE_SPECS = {
     "maze": {"name": "MAZE", "rule": "FIND THE PATH TO THE GOAL"},
@@ -41,6 +41,7 @@ TITLE_SPECS = {
     "packing": {"name": "PACKING", "rule": "FIT ALL PIECES INTO THE SPACE"},
     "lights": {"name": "LIGHTS", "rule": "TOGGLE LIGHTS UNTIL ALL ARE ON"},
     "fold": {"name": "FOLD", "rule": "FOLD PAPER INTO THE TARGET"},
+    "mosaic": {"name": "MOSAIC SHIFT", "rule": "SHIFT LINES TO RESTORE THE EMBLEM"},
 }
 TITLE_SECONDARY = "3 PUZZLES"
 TITLE_PROGRESSION = "EASY -> MEDIUM -> HARD"
@@ -199,6 +200,7 @@ def audio_cues(
         "packing": "piece-landing",
         "lights": "switch-toggle",
         "fold": "soft-paper-fold",
+        "mosaic": "cyclic-tile-slide",
     }
     for item, instance in zip(segments, instances):
         if item["ordinal"] > 1:
@@ -284,6 +286,10 @@ def _add_cue(pcm: array, cue: dict) -> None:
             elif profile == "soft-paper-fold":
                 noise = (((index * 1103515245 + 12345) >> 16) & 0x7FFF) - 16384
                 sample = int((math.sin(2 * math.pi * 280 * seconds) * 900 + noise * 0.035) * envelope)
+            elif profile == "cyclic-tile-slide":
+                progress = index / max(1, duration - 1)
+                frequency = 440 - 120 * progress
+                sample = int((math.sin(2 * math.pi * frequency * seconds) * 1400 + math.sin(2 * math.pi * 880 * seconds) * 500) * envelope)
             else:
                 raise ValueError(f"unknown operation sound profile: {profile}")
         position = (cue["sample_offset"] + index) * AUDIO_CHANNELS
@@ -1004,7 +1010,7 @@ def generate_representatives(
         )))
     manifest = {
         "schema_version": "1.1.0",
-        "kind": "six-plugin-three-band-representative-sequences",
+        "kind": "seven-plugin-three-band-representative-sequences",
         "collection_seed": collection_seed,
         "presentation_preset": PRESENTATION_PRESET,
         "timeline_preset": TIMELINE_PRESET,

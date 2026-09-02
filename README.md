@@ -1,6 +1,6 @@
 # Zero Button Game
 
-Zero Button Gameは、maze / pipes / parking / packing / lights / fold の決定論的なパズルGIF/MP4と、**Easy → Medium → Hardの音声付き3問MP4**を生成・検証する制作環境です。CLI・生成・metadata内部のband名は `easy` / `medium` / `target` で、sequenceの視聴者表示だけが `target` を **HARD** と表します。
+Zero Button Gameは、maze / pipes / parking / packing / lights / fold / mosaic の決定論的なパズルGIF/MP4と、**Easy → Medium → Hardの音声付き3問MP4**を生成・検証する制作環境です。CLI・生成・metadata内部のband名は `easy` / `medium` / `target` で、sequenceの視聴者表示だけが `target` を **HARD** と表します。`mosaic` のユーザー向けtitleは **MOSAIC SHIFT** です。
 
 ## 最短の使い方
 
@@ -25,7 +25,7 @@ PYTHONPATH=src python3 -m zero_button_game --help
 
 旧CLI `PYTHONPATH=src python3 -m puzzle_gif` から、新CLI `PYTHONPATH=src python3 -m zero_button_game` へ移行しました。旧packageのalias・shim・re-exportは提供しません。
 
-### 2. 6種の代表sequenceを一括生成する
+### 2. 7種の代表sequenceを一括生成する
 
 `--output` には、既存成果物と重ならない新しいディレクトリを指定してください。
 
@@ -35,7 +35,7 @@ PYTHONPATH=src python3 -m zero_button_game generate-representatives \
   --output output/my-representatives-2026-08-28
 ```
 
-6種それぞれの3問MP4と、collection rootの `manifest.json` を生成します。
+7種それぞれの3問MP4と、collection rootの `manifest.json` を生成します。
 
 ### 3. 1種のsequenceを生成する
 
@@ -45,7 +45,7 @@ PYTHONPATH=src python3 -m zero_button_game generate-sequence \
   --output output/my-pipes-sequence-2026-08-28
 ```
 
-`--type` は `maze` / `pipes` / `parking` / `packing` / `lights` / `fold` のいずれかです。各sequenceは内部band `easy` → `medium` → `target` を生成し、画面上では `EASY` → `MEDIUM` → `HARD` と表示します。
+`--type` は `maze` / `pipes` / `parking` / `packing` / `lights` / `fold` / `mosaic` のいずれかです。各sequenceは内部band `easy` → `medium` → `target` を生成し、画面上では `EASY` → `MEDIUM` → `HARD` と表示します。
 
 ### 4. 単体作品を生成する
 
@@ -80,7 +80,7 @@ audioはsequence用です。
 ### 6. 検証する
 
 ```bash
-# 6種collectionまたは1種sequence
+# 7種collectionまたは1種sequence
 PYTHONPATH=src python3 -m zero_button_game validate-sequence \
   output/my-representatives-2026-08-28
 
@@ -93,7 +93,7 @@ PYTHONPATH=src python3 -m zero_button_game validate \
 
 ### 7. 出力を確認する
 
-6種一括生成:
+7種一括生成:
 
 ```text
 <collection>/
@@ -126,7 +126,7 @@ sequence componentは単体artifact一式を保持しますが、合成に使っ
 
 ### 8. preset JSONを変更する
 
-現行18組（6種×3band）の生成条件と標準thinking timeは、`src/` 内の重複dictではなく [presets/current](presets/current/) のJSONが実行時の正本です。[presets/shared](presets/shared/) の2件は共通timeline契約を記録します。`current/` / `shared/` のfilenameとpreset IDは安定名で、仕様世代は `ruleset` / `schema_version` / equivalence policy / presentation contractなどで管理します。通常変更するのは `current/` だけです。
+現行21組（7種×3band）の生成条件と標準thinking timeは、`src/` 内の重複dictではなく [presets/current](presets/current/) のJSONが実行時の正本です。[presets/shared](presets/shared/) の2件は共通timeline契約を記録します。`current/` / `shared/` のfilenameとpreset IDは安定名で、仕様世代は `ruleset` / `schema_version` / equivalence policy / presentation contractなどで管理します。通常変更するのは `current/` だけです。
 
 ```bash
 PYTHONPATH=src python3 -c \
@@ -136,13 +136,13 @@ PYTHONPATH=src python3 -m unittest discover \
   -s tests -p 'test_presets.py' -v
 ```
 
-loaderは毎回JSONを読み直し、実際にparseしたsource bytesのSHA-256を単体metadataの `difficulty.quality_preset_sha256` とsequence metadataへ記録します。`quality_preset_source` は `current/<filename>` です。ファイル名・`name`・`puzzle_type`・`difficulty`・必須field・range・20fps格子が不整合ならfail closedです。`audit_catalog()` は current 18件とshared 2件だけを明示catalogと照合し、未登録JSON、欠落、ID重複を拒否します。
+loaderは毎回JSONを読み直し、実際にparseしたsource bytesのSHA-256を単体metadataの `difficulty.quality_preset_sha256` とsequence metadataへ記録します。`quality_preset_source` は `current/<filename>` です。ファイル名・`name`・`puzzle_type`・`difficulty`・必須field・range・20fps格子が不整合ならfail closedです。`audit_catalog()` は current 21件とshared 2件だけを明示catalogと照合し、未登録JSON、欠落、ID重複を拒否します。
 
 ## 主要な制約
 
 - **既存 `output/` を上書きしない。** 同一instanceは既定で `OUTPUT_CONFLICT` になります。再現検査も別の新規outputへ生成してください。単体の `--force` は既存instanceを `output/superseded/` へ退避しますが、通常運用では新規runを推奨します。sequenceに `--force` はありません。
 - **標準外thinking timeは比較条件。** `--thinking-time` は2.5〜20.0秒の20fps格子で全plugin / bandに指定できます。JSON標準と異なる値は `comparison-override-not-standard` と記録され、標準作品ではありません。正本生成ではoverrideを省略してください。
-- **一般利用者校正は未実施。** 既存種のthinking timeには単独評価者の個人内標準が含まれます。LightsのEasy 4.0秒 / Medium 6.0秒は2026-09-02に選んだ未校正候補で、Target 8.0秒だけが既存校正を維持します。構造難易度にも未校正bandがあり、sequence全体、title、countdown、HARD理解、音量・音の識別性は一般利用者未評価です。
+- **一般利用者校正は未実施。** 既存種のthinking timeには単独評価者の個人内標準が含まれます。LightsのEasy 4.0秒 / Medium 6.0秒は2026-09-02に選んだ未校正候補で、Target 8.0秒だけが既存校正を維持します。Mosaic Shiftの4.0 / 6.0 / 8.0秒も初期defaultで、人によるtiming校正をまだ行っていません。構造難易度にも未校正bandがあり、sequence全体、title、countdown、HARD理解、音量・音の識別性は一般利用者未評価です。
 - **difficulty scoreは種間比較不可。** score式とrangeはpluginごとに独立しています。
 - **`_full` は解答を含む。** 公開・評価時は通常 `contact_sheet.png` / `keyframes/` を使い、`*_full` を配布しないでください。
 - **`output/` は全体をGit管理外とする。** media、metadata、manifest、JSON / JSONL、一時stagingを含むローカル生成物はすべて `.gitignore` の対象です。再現性はseed、preset、コード、および `audit-quality` の標準出力などで担保します。
@@ -158,10 +158,13 @@ loaderは毎回JSONを読み直し、実際にparseしたsource bytesのSHA-256�
 | `packing` | [`packing-{easy,medium,target}.json`](presets/current/) | GIF / MP4 | MP4（音声あり／なし） | 4.0 / 4.0 / 8.0 |
 | `lights` | [`lights-{easy,medium,target}.json`](presets/current/) | GIF / MP4 | MP4（音声あり／なし） | 4.0 / 6.0（未校正候補）/ 8.0（既存校正） |
 | `fold` | [`fold-{easy,medium,target}.json`](presets/current/) | GIF / MP4 | MP4（音声あり／なし） | 4.0 / 6.0 / 6.0 |
+| `mosaic`（MOSAIC SHIFT） | [`mosaic-{easy,medium,target}.json`](presets/current/) | GIF / MP4 | MP4（音声あり／なし） | 4.0 / 6.0 / 8.0（未校正初期値） |
 
 内部band名は `easy` / `medium` / `target`、視聴者表示だけが `EASY` / `MEDIUM` / `HARD` です。単体は `--format gif` / `--format mp4` / `--format gif,mp4` で出力を選び、3問sequenceはMP4専用で `--audio on` / `--audio off` を選べます。
 
 thinking timeはframe 0から `reveal_start` までです。各pluginのruleset・Action・score range・校正metadataは [src/zero_button_game](src/zero_button_game/) と [presets/current](presets/current/) が実装上の正本です。配色・レイアウト・視覚受入条件は [VISUAL_DESIGN.md](VISUAL_DESIGN.md) を参照してください。
+
+Mosaic Shiftは3×3の完成emblemを合法なrow / column循環shiftでscrambleし、depth 8までのbounded complete BFSで最短手数・最短path数・expanded nodesを算出します。現行Action数はEasy 2 / Medium 3 / target 4です。equivalence policyは `mosaic-exact-action-order-v1` で、可換な別順序も別解として数えます。したがって採用候補は最短pathがexactに1本で、両軸が交差する順序依存の手順を持ちます。単一軸だけの修正、独立line修正、推測しやすい少数misplaced tile、細線や色だけに依存するemblemはquality contractで棄却します。
 
 ## 文書の位置づけ
 

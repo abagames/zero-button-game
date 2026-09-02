@@ -348,7 +348,8 @@ def _generate(request: GenerationRequest) -> GenerationResult:
         raise ValueError("count must be positive")
     plugin = get_plugin(request.puzzle_type)
     plugin.difficulty_preset(request.difficulty_band)
-    max_candidates = request.max_candidates or max(request.count * 50, 100)
+    declared_attempts = int(plugin.difficulty_preset(request.difficulty_band).get("search_attempts", 100))
+    max_candidates = request.max_candidates or max(request.count * 50, declared_attempts)
     request.output.mkdir(parents=True, exist_ok=True)
     accepted: list[Path] = []
     rejections: list[dict] = []

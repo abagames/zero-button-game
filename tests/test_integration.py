@@ -22,6 +22,7 @@ class IntegrationTests(unittest.TestCase):
                 ("packing", "easy", 20260822),
                 ("lights", "easy", 20260822),
                 ("fold", "easy", 11),
+                ("mosaic", "easy", 20260901),
             )
             for puzzle_type, band, seed in cases:
                 with self.subTest(puzzle_type=puzzle_type, band=band):
@@ -68,7 +69,7 @@ class IntegrationTests(unittest.TestCase):
                         with self.assertRaisesRegex(ValueError, "metadata uniqueness evidence"):
                             validate_instance(instance, strict=True)
                         write_json(instance / "metadata.json", original_metadata)
-                    if puzzle_type in {"parking", "packing", "lights", "fold"}:
+                    if puzzle_type in {"parking", "packing", "lights", "fold", "mosaic"}:
                         self.assertEqual(
                             metadata["difficulty"]["human"]["status"],
                             f"uncalibrated-{puzzle_type}-v1",

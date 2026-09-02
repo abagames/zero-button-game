@@ -35,6 +35,9 @@ EXPECTED_STABLE_RUNTIME = {
     ("fold", "easy"): {"name":"fold-easy","band":"easy","width":6,"height":6,"search_attempts":32,"thinking_time_seconds":4.0,"min_folds":2,"max_folds":2,"min_target_side":3,"max_decoy_creases":40,"min_difficulty_score":180,"max_difficulty_score":290},
     ("fold", "medium"): {"name":"fold-medium","band":"medium","width":6,"height":6,"search_attempts":64,"thinking_time_seconds":6.0,"min_folds":3,"max_folds":3,"min_target_side":2,"max_decoy_creases":60,"min_difficulty_score":300,"max_difficulty_score":440},
     ("fold", "target"): {"name":"fold-target","band":"target","width":6,"height":6,"search_attempts":240,"thinking_time_seconds":6.0,"min_folds":4,"max_folds":4,"min_target_side":2,"max_decoy_creases":80,"min_difficulty_score":450,"max_difficulty_score":620},
+    ("mosaic", "easy"): {"name":"mosaic-easy","band":"easy","size":3,"search_attempts":240,"solve_node_budget":362880,"thinking_time_seconds":4.0,"min_shifts":2,"max_shifts":2,"min_cross_axis_pairs":1,"min_misplaced_tiles":5,"min_difficulty_score":55,"max_difficulty_score":85},
+    ("mosaic", "medium"): {"name":"mosaic-medium","band":"medium","size":3,"search_attempts":480,"solve_node_budget":362880,"thinking_time_seconds":6.0,"min_shifts":3,"max_shifts":3,"min_cross_axis_pairs":2,"min_misplaced_tiles":6,"min_difficulty_score":80,"max_difficulty_score":120},
+    ("mosaic", "target"): {"name":"mosaic-target","band":"target","size":3,"search_attempts":1200,"solve_node_budget":362880,"thinking_time_seconds":8.0,"min_shifts":4,"max_shifts":4,"min_cross_axis_pairs":3,"min_misplaced_tiles":7,"min_difficulty_score":115,"max_difficulty_score":175},
 }
 
 class PresetLoaderTests(unittest.TestCase):
@@ -54,9 +57,9 @@ class PresetLoaderTests(unittest.TestCase):
         path.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
 
     def test_catalog_explicitly_covers_current_and_shared_files(self):
-        self.assertEqual(PresetLoader().audit_catalog(), {"current": 18, "shared": 2, "total": 20})
+        self.assertEqual(PresetLoader().audit_catalog(), {"current": 21, "shared": 2, "total": 23})
 
-    def test_all_18_runtime_values_equal_stable_name_expectations(self):
+    def test_all_21_runtime_values_equal_stable_name_expectations(self):
         self.assertEqual(set(CURRENT_PRESET_FILES), set(EXPECTED_STABLE_RUNTIME))
         for key, expected in EXPECTED_STABLE_RUNTIME.items():
             with self.subTest(plugin=key[0], band=key[1]):
@@ -152,7 +155,7 @@ class PresetLoaderTests(unittest.TestCase):
                 self.assertEqual(loader.load(plugin, band).runtime, EXPECTED_STABLE_RUNTIME[(plugin, band)])
             self.assertEqual(
                 loader.audit_catalog(("current",)),
-                {"current": 18, "shared": 0, "total": 18},
+                {"current": 21, "shared": 0, "total": 21},
             )
 
     def test_explicit_category_roots_support_current_and_shared_catalogs(self):
@@ -162,7 +165,7 @@ class PresetLoaderTests(unittest.TestCase):
                 current=repository / "presets" / "current",
                 shared=repository / "presets" / "shared",
             )
-            self.assertEqual(PresetLoader(roots).audit_catalog()["total"], 20)
+            self.assertEqual(PresetLoader(roots).audit_catalog()["total"], 23)
             with use_preset_root(repository):
                 self.assertEqual(get_plugin("maze").difficulty_preset("target")["name"], "maze-target")
 

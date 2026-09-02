@@ -11,7 +11,7 @@ from typing import Iterator, Mapping
 
 
 CURRENT_BANDS = ("easy", "medium", "target")
-CURRENT_PLUGINS = ("maze", "pipes", "parking", "packing", "lights", "fold")
+CURRENT_PLUGINS = ("maze", "pipes", "parking", "packing", "lights", "fold", "mosaic")
 
 # This is intentionally an explicit repository-relative catalog. Discovery is
 # ambiguous and would make unlisted experiments look current. The catalog
@@ -36,6 +36,9 @@ CURRENT_PRESET_FILES: Mapping[tuple[str, str], str] = MappingProxyType({
     ("fold", "easy"): "presets/current/fold-easy.json",
     ("fold", "medium"): "presets/current/fold-medium.json",
     ("fold", "target"): "presets/current/fold-target.json",
+    ("mosaic", "easy"): "presets/current/mosaic-easy.json",
+    ("mosaic", "medium"): "presets/current/mosaic-medium.json",
+    ("mosaic", "target"): "presets/current/mosaic-target.json",
 })
 
 SHARED_PRESET_FILES: Mapping[str, str] = MappingProxyType({
@@ -363,6 +366,22 @@ def _runtime_fold(document: Mapping[str, object], band: str) -> dict[str, object
     }
 
 
+def _runtime_mosaic(document: Mapping[str, object], band: str) -> dict[str, object]:
+    shifts = _range(document, "mechanical", "shortest_actions")
+    score = _range(document, "mechanical", "difficulty_score")
+    return {
+        "name": _string(document, "name"), "band": band,
+        "size": _integer(document, "board", "size", minimum=1),
+        "search_attempts": _integer(document, "generation", "search_attempts", minimum=1),
+        "solve_node_budget": _integer(document, "generation", "solve_node_budget", minimum=1),
+        "thinking_time_seconds": _thinking_time(document),
+        "min_shifts": shifts[0], "max_shifts": shifts[1],
+        "min_cross_axis_pairs": _integer(document, "mechanical", "cross_axis_pairs_min", minimum=1),
+        "min_misplaced_tiles": _integer(document, "mechanical", "misplaced_tiles_min", minimum=1),
+        "min_difficulty_score": score[0], "max_difficulty_score": score[1],
+    }
+
+
 _RUNTIME_BUILDERS = {
     "maze": _runtime_maze,
     "pipes": _runtime_pipes,
@@ -370,6 +389,7 @@ _RUNTIME_BUILDERS = {
     "packing": _runtime_packing,
     "lights": _runtime_lights,
     "fold": _runtime_fold,
+    "mosaic": _runtime_mosaic,
 }
 
 
@@ -450,8 +470,8 @@ class PresetLoader:
         if any(category not in catalogs for category in categories):
             raise PresetValidationError(f"unknown preset catalog category: {categories!r}")
         all_entries = {key: value for catalog in catalogs.values() for key, value in catalog.items()}
-        if len(all_entries) != 20 or len(set(all_entries.values())) != 20:
-            raise PresetValidationError("preset catalog must contain 20 unique ids and files")
+        if len(all_entries) != 23 or len(set(all_entries.values())) != 23:
+            raise PresetValidationError("preset catalog must contain 23 unique ids and files")
         seen_ids: set[str] = set()
         counts = {"current": 0, "shared": 0}
         roots = {"current": "current", "shared": "shared"}

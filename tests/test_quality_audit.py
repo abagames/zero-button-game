@@ -20,6 +20,7 @@ CASES = {
     "packing": ("easy", 20260822),
     "lights": ("easy", 20260822),
     "fold": ("easy", 11),
+    "mosaic": ("easy", 20260901),
 }
 
 REQUIRED_KEYS = {

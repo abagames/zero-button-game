@@ -23,6 +23,18 @@ from .lights_render import (
 )
 from .maze import MazeRules, MazeSolver, difficulty_preset, difficulty_report, generate_maze, quality_rejection, replay, validate_maze_solution
 from .models import PuzzleSpec, Solution, TimelineSpec
+from .mosaic import (
+    MOSAIC_EQUIVALENCE_VERSION, MosaicPuzzleSpec, MosaicRules, MosaicSolver,
+    action_signature as mosaic_action_signature, generate_mosaic, mosaic_difficulty_preset,
+    mosaic_difficulty_report, mosaic_quality_rejection, replay_mosaic,
+    validate_mosaic_solution,
+)
+from .mosaic_presentation import mosaic_plan
+from .mosaic_render import (
+    BOARD_PX as MOSAIC_BOARD_PX, CELL_PX as MOSAIC_CELL_PX,
+    MIN_CELL_PX as MOSAIC_MIN_CELL_PX, MIN_STROKE_PX as MOSAIC_MIN_STROKE_PX,
+    MosaicRenderer, MosaicScene, MosaicSceneBuilder, alternate_mosaic_scene,
+)
 from .pipes import (
     PIPE_EQUIVALENCE_VERSION, PipePuzzleSpec, PipeRules, PipeSolver, PipeState, generate_pipes, pipe_difficulty_preset,
     pipe_difficulty_report, pipe_quality_rejection, trace_pipes, validate_pipe_solution,
@@ -1065,6 +1077,135 @@ class FoldPlugin:
         return "uncalibrated-fold-v1"
 
 
+@dataclass(frozen=True)
+class MosaicPlugin:
+    puzzle_type: str = "mosaic"
+    plugin_version: str = "1.0.0"
+    rules = MosaicRules()
+    solver = MosaicSolver(rules)
+    scene_builder = MosaicSceneBuilder()
+    solver_reject_codes = frozenset({
+        "UNSOLVABLE_WITHIN_DEPTH", "SOLVE_BUDGET_EXCEEDED", "MULTIPLE_SHORTEST_SOLUTIONS",
+    })
+
+    @staticmethod
+    def timeline_preset_label(band: str, seconds: float, overridden: bool) -> str:
+        return standard_timeline_preset_label("mosaic", mosaic_difficulty_preset(band), band, seconds, overridden)
+
+    @staticmethod
+    def timing_calibration_profile(band: str) -> dict | None:
+        if band not in {"easy", "medium", "target"}:
+            return None
+        standard = float(mosaic_difficulty_preset(band)["thinking_time_seconds"])
+        return {
+            "variant": f"mosaic-{band}-initial-{_seconds_text(standard)}s",
+            "baseline_thinking_time_seconds": 2.5,
+            "previous_evaluated_thinking_time_seconds": None,
+            "standard_thinking_time_seconds": standard,
+            "calibration_change": f"initial {_seconds_text(standard)}s default; not yet calibrated",
+            "calibration_status": "uncalibrated-initial-standard",
+            "source_evaluation": "none-initial-default",
+            "calibration_scope": "Mosaic Shift initial per-band presentation default; no human timing evaluation",
+            "structural_difficulty_status": "uncalibrated-mosaic-v1",
+            "timing_status": "candidate-pending-selection",
+        }
+
+    difficulty_preset = staticmethod(mosaic_difficulty_preset)
+    generate_candidate = staticmethod(generate_mosaic)
+    problem_from_dict = staticmethod(MosaicPuzzleSpec.from_dict)
+    difficulty = staticmethod(mosaic_difficulty_report)
+    quality_filter = staticmethod(mosaic_quality_rejection)
+    replay = staticmethod(replay_mosaic)
+    validate_solution = staticmethod(validate_mosaic_solution)
+    presentation = staticmethod(mosaic_plan)
+
+    @staticmethod
+    def animation_units(solution: Solution) -> int:
+        return len(solution.actions)
+
+    @staticmethod
+    def renderer_factory() -> MosaicRenderer:
+        return MosaicRenderer()
+
+    alternate_scene = staticmethod(alternate_mosaic_scene)
+
+    @staticmethod
+    def metadata_contract_checks(puzzle: MosaicPuzzleSpec, solution: Solution, metadata: dict) -> tuple[list[str], list[str]]:
+        analysis = MosaicPlugin.solver.analyze(puzzle)
+        recorded = metadata.get("solution", {}).get("uniqueness", {})
+        expected_path = tuple(mosaic_action_signature(action) for action in solution.actions)
+        ok = (
+            analysis["status"] == "unique"
+            and analysis["shortest_path_count"] == 1
+            and analysis["path"] == expected_path
+            and recorded.get("status") == "unique"
+            and recorded.get("shortest_path_count") == 1
+            and recorded.get("shortest_depth") == len(solution.actions)
+            and recorded.get("equivalence_policy_version") == MOSAIC_EQUIVALENCE_VERSION
+            and solution.answer_equivalence_key == "unique:" + str(recorded.get("normalized_signature_hash"))
+        )
+        return (["uniqueness_metadata"], []) if ok else ([], ["metadata uniqueness evidence differs from solver oracle"])
+
+    @staticmethod
+    def visual_contract(scene: MosaicScene, renderer: MosaicRenderer) -> dict:
+        return {
+            "semantic_bounds": list(scene.semantic_bounds), "safe_area": [36, 36, 684, 684],
+            "board_px": MOSAIC_BOARD_PX, "cell_px": MOSAIC_CELL_PX,
+            "minimum_cell_px": MOSAIC_MIN_CELL_PX,
+            "minimum_emblem_stroke_px": MOSAIC_MIN_STROKE_PX,
+            "wrap_around_visible": True, "state_change_not_color_only": True,
+            "state_change_note": "thick fragment outlines, cyclic translation and direction arrows carry state and motion independently of colour",
+        }
+
+    @staticmethod
+    def render_contract_checks(scene: MosaicScene, renderer: MosaicRenderer) -> tuple[list[str], list[str]]:
+        passed: list[str] = []
+        failed: list[str] = []
+        timeline = scene.plan.timeline
+        if MosaicPlugin.rules.is_goal(scene.puzzle, scene.trace.final):
+            passed.append("emblem_restored")
+        else:
+            failed.append("final tile arrangement does not restore the emblem")
+        (passed if MOSAIC_CELL_PX >= MOSAIC_MIN_CELL_PX else failed).append(
+            "minimum_cell_size" if MOSAIC_CELL_PX >= MOSAIC_MIN_CELL_PX else "mosaic cell is below readable minimum"
+        )
+        mapping_ok = True
+        for order, signature in enumerate(scene.actions):
+            middle = renderer.shift_snapshot_for_units(scene, order + 0.5)
+            if (
+                (middle["axis"], middle["line"], middle["delta"]) != signature
+                or middle["action_index"] != order or not 0.0 < middle["progress"] < 1.0
+            ):
+                mapping_ok = False
+            boundary = renderer.shift_snapshot_for_units(scene, float(order + 1))
+            if boundary["tiles"] != scene.states[order + 1]:
+                mapping_ok = False
+        (passed if mapping_ok else failed).append(
+            "cyclic_shift_action_rendering" if mapping_ok else "rendered shift does not match shift_line actions"
+        )
+        before = renderer.semantic_snapshot(scene, timeline["solve_end"] - 1)
+        after = renderer.semantic_snapshot(scene, timeline["solve_end"])
+        clear_ok = not before["solved"] and after["solved"] and after["tiles"] == scene.puzzle.goal_tiles
+        (passed if clear_ok else failed).append(
+            "clear_after_last_shift" if clear_ok else "CLEAR appears before or without the last shift"
+        )
+        analysis = MosaicPlugin.solver.analyze(scene.puzzle)
+        unique_ok = analysis["status"] == "unique" and analysis["shortest_path_count"] == 1
+        (passed if unique_ok else failed).append(
+            "unique_shortest_sequence" if unique_ok else "shift sequence is not uniquely shortest"
+        )
+        cues = [cue for cue in scene.plan.visual_cues if cue.get("kind") == "emblem_complete"]
+        cue_ok = len(cues) == 1 and cues[0].get("state_mutation") is False
+        (passed if cue_ok else failed).append(
+            "completion_state_immutable" if cue_ok else "completion cue is not explicitly state-neutral"
+        )
+        return passed, failed
+
+    @staticmethod
+    def calibration_label(band: str) -> str:
+        return "uncalibrated-mosaic-v1"
+
+
 def _static_offset(scene: ParkingScene, state, index: int) -> float:
     return float(state.positions[index])
 
@@ -1072,6 +1213,7 @@ def _static_offset(scene: ParkingScene, state, index: int) -> float:
 PLUGINS = {
     "maze": MazePlugin(), "pipes": PipesPlugin(), "parking": ParkingPlugin(),
     "packing": PackingPlugin(), "lights": LightsPlugin(), "fold": FoldPlugin(),
+    "mosaic": MosaicPlugin(),
 }
 
 

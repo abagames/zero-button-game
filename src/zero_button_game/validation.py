@@ -94,6 +94,8 @@ ACCEPTED_TIMING_CALIBRATION_ROUNDS = (
                   ("fold", "medium", 6.0, 4.0, "studies/timing_sweep_round5_fold_calibration_2026-08-24.json"),
                   ("fold", "target", 6.0, 4.0, "studies/timing_sweep_round5_fold_calibration_2026-08-24.json"),
               )),
+            *(("mosaic", band, seconds, None, "none-initial-default", "uncalibrated-initial-standard", "candidate-pending-selection")
+              for band, seconds in (("easy", 4.0), ("medium", 6.0), ("target", 8.0))),
             *(("lights", band, seconds, previous, "none-unvalidated-retiming-2026-09-02", "uncalibrated-standard-candidate", "candidate-pending-selection")
               for band, seconds, previous in (("easy", 4.0, 6.0), ("medium", 6.0, 8.0))),
         )

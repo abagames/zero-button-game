@@ -93,7 +93,7 @@ def build_parser() -> argparse.ArgumentParser:
     sequence.add_argument("--output", type=Path, required=True)
     sequence.add_argument("--max-candidates", type=int)
     sequence.add_argument("--audio", choices=("off", "on"), default="off", help="add deterministic four-layer cues (default: off)")
-    representatives = subparsers.add_parser("generate-representatives", help="generate the six flagship three-puzzle MP4s")
+    representatives = subparsers.add_parser("generate-representatives", help="generate the seven flagship three-puzzle MP4s")
     representatives.add_argument("--seed", type=int, required=True)
     representatives.add_argument("--output", type=Path, required=True)
     representatives.add_argument("--max-candidates", type=int)

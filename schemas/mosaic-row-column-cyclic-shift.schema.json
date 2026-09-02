@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mosaic-row-column-cyclic-shift.schema.json",
+  "title": "Mosaic Shift problem (3x3 cyclic row/column shifts)",
+  "type": "object",
+  "required": ["schema_version", "puzzle_type", "generator_version", "size", "initial_tiles", "goal_tiles", "art_name", "ruleset"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "puzzle_type": {"const": "mosaic"},
+    "generator_version": {"const": "mosaic-gen-1"},
+    "size": {"const": 3},
+    "initial_tiles": {
+      "type": "array", "minItems": 9, "maxItems": 9,
+      "items": {"type": "integer", "minimum": 0, "maximum": 8},
+      "description": "A permutation of tile fragment IDs 0..8 in row-major board order."
+    },
+    "goal_tiles": {
+      "const": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+      "description": "Canonical completed emblem fragment order."
+    },
+    "art_name": {"enum": ["halo-diamond", "four-petal-star", "shield-knot"]},
+    "ruleset": {"const": "row-column-cyclic-shift-v1"}
+  },
+  "additionalProperties": false,
+  "$comment": "Action contract: kind shift_line, actor_id row-<line> or col-<line>, params {axis:[0|1], line:[0..2], delta:[-1|1]}, with a state_hash precondition. Positive delta moves right/down with visible wrap-around. Uniqueness is one exact shortest ordered sequence under mosaic-exact-action-order-v1, proven by bounded complete BFS through depth 8."
+}
