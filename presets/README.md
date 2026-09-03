@@ -1,9 +1,9 @@
 # Preset layout
 
-利用者が通常変更する実行時正本は [current](current/) の21件（7 plugin × `easy` / `medium` / `target`）だけです。JSON bytesがそのまま `quality_preset_sha256` の入力になります。
+The only runtime sources of truth that users normally modify are the 21 files in [current](current/) (7 plugins × `easy` / `medium` / `target`). The JSON bytes are used directly as the input to `quality_preset_sha256`.
 
-[shared](shared/) の2件は共通timeline契約の記録です。現行band presetとは別物で、現在のruntime値は各band JSONから読みます。
+The two files in [shared](shared/) record the common timeline contract. They are separate from the current band presets; current runtime values are read from each band's JSON file.
 
-`current/` / `shared/` のfilenameとpreset IDは利用者向けの安定名です。技術的な仕様世代はfilenameではなく、各JSONの `ruleset`、`schema_version`、equivalence policy、presentation contractなどで管理します。
+The filenames and preset IDs under `current/` and `shared/` are stable, user-facing names. Technical specification generations are identified by each JSON file's `ruleset`, `schema_version`, equivalence policy, presentation contract, and related fields, not by its filename.
 
-`PresetLoader().audit_catalog()` はcurrent 21件とshared 2件の計23件だけを正規catalogとして監査します。未登録JSON、欠落、IDとfilenameの不一致はfail closedです。
+`PresetLoader().audit_catalog()` treats exactly 23 files—the 21 current presets and 2 shared presets—as the canonical catalog. It fails closed on unregistered JSON files, missing files, or mismatches between IDs and filenames.

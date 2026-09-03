@@ -1,182 +1,139 @@
-# ゲームデザイン：Zero Button Game
+# Game Design: Zero Button Game
 
-## 1. 文書の役割と正本
+## 1. Purpose and sources of truth
 
-本書は、**何がZero Button Game形式に適するか**を判断し、ジャンルの設計・選定・校正・正式統合を行うための現行ゲームデザイン仕様です。[VISUAL_DESIGN.md](VISUAL_DESIGN.md) は採用したゲームを**どう見せるか**、[README.md](README.md) は利用者が**どう生成・検証するか**を扱います。
+This document defines **what fits the Zero Button Game format** and how genres are evaluated and calibrated. [VISUAL_DESIGN.md](VISUAL_DESIGN.md) covers presentation; [README.md](README.md) covers generation and validation.
 
-本書だけで実行仕様は変わりません。実行値と機械検査の正本は [presets/current](presets/current/)、[`protocol.py`](src/zero_button_game/protocol.py)、各ジャンルのプラグイン・規則・ソルバー・表示計画、[`pipeline.py`](src/zero_button_game/pipeline.py)、[`sequence.py`](src/zero_button_game/sequence.py)、および [tests](tests/) です。設計変更時は関係する正本を同じ変更で同期します。
+Runtime values and machine checks live in [presets/current](presets/current/), the genre plugins and solvers, [`protocol.py`](src/zero_button_game/protocol.py), [`pipeline.py`](src/zero_button_game/pipeline.py), [`sequence.py`](src/zero_button_game/sequence.py), and [tests](tests/). Update them with this document whenever a design change affects behavior.
 
-| 正本 | 責務 |
+## 2. Core format
+
+Zero Button Game is a short prediction game that requires no viewer input. Each problem follows these canonical phases:
+
+1. **appearance**: hide the board at `frame 0`, then briefly reveal the problem.
+2. **thinking** (shown as `THINK`): hold the initial state still while the viewer predicts the outcome or procedure. An initial design guideline is about 4–8 seconds.
+3. **solve**: after the reveal, automatically execute the deterministic correct operations (`Action`).
+4. **result**: hold the successful state so completion is understandable without reading text.
+5. **transition**: move to the next problem or finish. Three-problem sequences progress Easy → Medium → `target` (shown as HARD).
+
+Thinking time runs from `frame 0` to `reveal_start`. The 4–8 second range is a design guideline, not a fixed rule; current calibrated values include 2.5 and 3.5 seconds. Consult presets and code for exact values. No phase requires viewer input.
+
+## 3. Principles for fitting the format
+
+Every new genre or major `ruleset` change must satisfy all of the following:
+
+- **Intuitive goal**: explain in one sentence what must be done to succeed.
+- **Short-horizon prediction**: infer the outcome or main procedure from the still image shown during `thinking`.
+- **Short solution**: initially target about 2–5 typical operations.
+- **Procedural dependency**: earlier operations change later choices or state. If operations commute, require enough combinatorial interaction and state the `equivalence_policy` explicitly.
+- **Large state changes**: every operation clearly changes position, connectivity, illumination, outline, arrangement, or another focal property.
+- **Traceable causality**: watching `solve` makes it possible to understand how one operation enabled the next.
+- **Immediate success state**: success is recognizable within two seconds of `result`. `CLEAR` is supporting feedback, never the sole evidence.
+- **Minimal legend**: show only what communicates the goal and primary operation, without leaking solution clues.
+- **Determinism**: identical seeds, presets, and code produce identical problems, solutions, and metadata.
+- **Defined solution identity**: either prove uniqueness or fix, alongside the `ruleset`, the `equivalence_policy` that defines when solutions are identical.
+
+### Counting `Action` operations
+
+Two to five operations is an **initial design guideline** for producing candidates that viewers can retain during `thinking` and follow during `solve`. It is neither a law nor a retroactive universal limit. Current examples above five operations, such as edge-by-edge movement in `maze` and the `target` band in `parking`, are checked separately for continuity of motion, causal readability, and total animation duration. Current values are defined by presets, solver-produced `Solution.actions`, and tests.
+
+## 4. Designing difficulty
+
+| Good difficulty | Poor difficulty |
 |---|---|
-| `GAME_DESIGN.md` | 適合条件、難しさ、採用基準、校正方法 |
-| `VISUAL_DESIGN.md` | 配色、レイアウト、可読下限、アニメーション、視覚受入条件 |
-| `README.md` | コマンドライン操作、生成物、標準値への入口、運用上の制約 |
-| プリセット・プラグイン・コード・テスト | 実行値、`ruleset`、同値関係、生成・`solve`・検査の機械的契約 |
+| Operation order changes what becomes possible | Requires searching for many tiny differences |
+| Presents a small number of plausible branches | Requires memorizing many clues or exception rules |
+| Includes convincing near-miss alternatives | Operations cannot be inferred without instructions |
+| Deepens dependencies at the same board size | Merely increases the board or object count |
+| `solve` reveals why a prediction failed | Solver output looks like an arbitrary list of steps |
 
-## 2. 基本フォーマット
+Do not define difficulty by operation count alone. Combine dependency depth, branching, plausible near misses, solver search nodes (`expanded_nodes`), and visual readability. A plugin-specific `difficulty_score` may select bands only within that genre; comparing scores between genres is prohibited.
 
-Zero Button Gameは、視聴者入力を一切要求しない短い予測ゲームです。1問は次の正式なフェーズの順で進みます。
+- **Easy (`easy`)**: goal and operation are immediately recoverable, branching is limited, and the representative causal pattern can be learned.
+- **Medium (`medium`)**: under the same `ruleset`, add at least one dependency level or plausible near miss so a greedy choice may fail.
+- **target**: shown as HARD. Strengthen multiple dependencies, competing branches, or deeper near misses, but not through more explanation, fine-detail search, or a longer `solve`.
 
-1. **appearance**: `frame 0`では盤面を隠し、問題を短く出現させる。
-2. **thinking**（画面表示は `THINK`）: 初期状態を静止提示し、視聴者が結果または手順を予測する。初期設計の目安は4〜8秒程度。
-3. **solve**: 解答公開後、決定論的な正解操作（`Action`）を自動実行する。
-4. **result**: 成功状態を保持し、文字を読まなくても完了を理解できるようにする。
-5. **transition**: 次問または終了へ移る。3問シーケンスでは Easy → Medium → `target`（画面表示は HARD）と進む。
+Candidate scans must show that several of operation count, dependency, branching, near misses, search nodes, and readability progress monotonically as intended across bands. Calibrate structure separately from thinking time. Some current structural bands are recorded as `uncalibrated-*`, and current thinking times are not calibrated for a general audience. Mosaic Shift's 4.0 / 6.0 / 8.0 seconds are uncalibrated initial values.
 
-思考時間は `frame 0` から `reveal_start` までです。4〜8秒は新規設計の目安であって固定値ではありません。現行には2.5秒・3.5秒などの校正値もあり、正確な値はプリセットとコードを参照します。視聴者による入力は全区間で不要です。
+## 5. Designs to avoid and design precedents
 
-## 3. 形式への適合原則
+Do not normally accept:
 
-新規ジャンルと大きな `ruleset` 変更は、次をすべて説明できることを採用条件とします。
+- Multi-constraint pencil puzzles that require many clues and exception rules.
+- Long solutions that resemble solver output rather than visible state changes.
+- One-operation puzzles without predictive depth.
+- Physics simulations based on chance or continuous quantities.
+- Games whose target cannot be inferred from the board.
+- States or outcomes distinguished only by color.
+- Completed forms that cannot be inferred from the initial view or a neutral legend.
+- Cosmetic variants with the same operations, dependencies, and prediction target as an existing genre.
 
-- **直感的な目標**: 「何をどうすれば成功か」を一文で言える。
-- **短時間予測**: `thinking` 中の静止画だけから、結果または主要手順を推測できる。
-- **短い解答**: 初期設計では典型2〜5操作程度を目安にする。
-- **手順依存**: 前の操作が後の選択や状態を変える。可換操作を許す場合も、組合せとして十分な相互作用があり、同値関係（`equivalence_policy`）を明示する。
-- **大きな状態変化**: 各操作で注目対象の位置、接続、点灯、外形、配置などが明確に変わる。
-- **追える因果**: `solve` を見れば「この操作のため、次が可能になった」と追跡できる。
-- **即時の成功状態**: `result` を見て2秒以内に成功を判定できる。`CLEAR` は補助であり、成功の唯一の根拠にしない。
-- **最小限の凡例**: 目標と主要操作を伝えるために必要なものだけを置き、解法の手がかりにしない。
-- **決定論性**: 同じシード・プリセット・コードから同じ問題、解、メタデータを得る。
-- **解の定義**: 一意解を証明するか、同一解とみなす `equivalence_policy` を `ruleset` とともに固定する。
+- **Rejected Tents / Trees-style designs**: visual search across many clues and local constraints makes the goal and main procedure hard to recover quickly.
+- **Mirror Swap-style designs are insufficient**: a single swap can show a readable state change, but lacks order dependency and predictive depth.
+- **Shortened Mosaic Shift**: representative six-move problems were too demanding to retain during `thinking` and follow during `solve`. The current standard uses shortest solutions of Easy 2 / Medium 3 / target 4 operations while preserving depth through cross-axis order dependency, a unique shortest solution, and enough misplaced tiles (`misplaced_tiles`).
 
-### 操作（`Action`）数の扱い
+## 6. The current seven genres
 
-2〜5操作は、`thinking` で保持でき、`solve` を一目で追える候補を早く作るための**初期設計の目安**です。固定法則でも、既存ジャンルへ遡及適用する一律上限でもありません。`maze` の辺単位移動や `parking` の `target` 難易度帯のように5を超える現行例は、動きの連続性、因果の可読性、アニメーション全長を別途検査します。現行値はプリセット、ソルバーが出す `Solution.actions`、およびテストが正本です。
-
-## 4. 難しさの作り方
-
-### 良い難しさと悪い難しさ
-
-| 良い難しさ | 悪い難しさ |
-|---|---|
-| 操作順で後続の可能性が変わる | 小さい差を大量に探させる |
-| もっともらしい分岐が少数ある | 手がかりや例外規則を多数覚えさせる |
-| 正解に近い惜しい誤答候補がある | 説明文を読まないと操作を復元できない |
-| 同じ盤面規模でも依存関係が深くなる | 盤面や物体数を増やすだけ |
-| `solve` を見ると誤予測の原因が分かる | ソルバーの手順が羅列にしか見えない |
-
-難易度は操作数だけで決めません。少なくとも依存の深さ、分岐、惜しい誤答候補、ソルバーの探索ノード数（`expanded_nodes`）、初期状態と動きの視覚可読性を組み合わせます。プラグイン固有の `difficulty_score` は同じジャンル内の難易度帯の選別にだけ使い、ジャンル間比較を禁止します。
-
-### Easy / Medium / target の設計
-
-- **Easy（`easy`）**: 目標と操作が即座に復元でき、分岐が少なく、代表的な因果を学べる。
-- **Medium（`medium`）**: 同じ `ruleset` のまま、1段以上の依存または惜しい誤答候補を加え、単純な貪欲選択では外し得る。
-- **target**: 画面上は HARD。複数の依存、競合する分岐、深い惜しい誤答候補のいずれかを強めるが、説明量、微細探索、`solve` の長さで難しくしない。
-
-難易度帯の間では、操作数、依存、分岐、惜しい誤答候補、探索ノード数、可読性のうち複数が意図どおり単調になることを候補走査で確認します。構造値と思考時間は別に校正します。現行7種には `uncalibrated-*` と記録される未校正の構造難易度帯があり、既存の思考時間も一般利用者に対して未校正です。特にMosaic Shiftの4.0 / 6.0 / 8.0秒は未校正初期値です。
-
-## 5. 避けるべき設計と設計事例
-
-次は原則として採用しません。
-
-- 多数の数字・手がかり・例外制約を同時に読む多制約ペンシルパズル。
-- 長い解答が、状態変化ではなくソルバーが出した操作の羅列に見えるもの。
-- 1操作で完了し、予測に奥行きがないもの。
-- 連続物理量や偶然に結果が左右される物理シミュレーション。本プロジェクトの現行方針では対象外。
-- 抽象規則そのものを当てさせ、目標状態を盤面から推測できないもの。
-- 色だけで状態、対象、正誤を区別するもの。
-- 完成形が初期画面や中立な凡例から推測不能なもの。
-- 既存ジャンルと操作、依存関係、予測対象が同じで、登場物や外観だけを変えたもの。
-
-過去の判断は、個別案の会話記録ではなく次の一般則として扱います。
-
-- **Tents / Trees型を不採用**: 多数の手がかりと局所制約の視覚探索が中心になり、短時間に目標・主要手順を復元しにくい。
-- **Mirror Swap型は不足**: 1操作の交換だけでは状態変化は読めても、順序依存と予測の奥行きが足りない。
-- **Mosaic Shiftを短縮**: 6手の代表作を含む構成は `thinking` での保持と `solve` 追跡に重かった。現行標準をEasy 2 / Medium 3 / target 4の最短操作へ絞り、交差軸の順序依存、唯一最短解、十分な誤配置タイル数（`misplaced_tiles`）で奥行きを維持した。
-
-## 6. 現行7ジャンル
-
-| ジャンル | 目標 | `thinking` で予測するもの | 主要操作（`Action.kind`） | 適合する理由 | 主要リスク |
+| Genre | Goal | Prediction during `thinking` | Primary operation | Why it fits | Main risk |
 |---|---|---|---|---|---|
-| `maze` | STARTからGOALへ到達 | 通る経路と分岐の選択 | `traverse_edge` | 一本の経路が連続して現れ、誤分岐と正解の因果が読める | 辺単位の操作列が長くなりやすく、細かい視覚探索や単なる巨大化に陥る |
-| `pipes` | 水源（`source`）から目標（`sink`）へ漏れない接続を作る | 使用経路と回転対象・向き | `rotate_piece` | 接続口の回転が大きく変化し、最後に流れで成立を確認できる | 接続口の密集、複数の最小経路、無関係な回転 |
-| `parking` | 対象車を東の出口から出す | 妨害車を動かす順序とスライド量 | `move_piece` | 各スライドが次の空間を作るため依存が明快 | 不要な車両、長い操作列、似た盤面の総当たり感 |
-| `packing` | 全ピースで穴を重なりなく隙間なく埋める | 各形状の配置基点（`anchor`） | `move_piece` | 配置ごとに空間が大きく埋まり、完成形を即時確認できる | 回転不可の読み落とし、細かい形状探索、同形ピース交換を別解と誤認すること |
-| `lights` | 全マスを点灯する | 押すマスの集合 | `toggle_cell` | 1押しで十字領域が変わり、短い組合せを追える | 押下は可換なので、そのままの順序に意味がない。色だけへの依存、貪欲手順で単調すぎる盤面にも注意 |
-| `fold` | 紙の外形を目標へ合わせ、各目標マスを着色マスでちょうど1回覆う | 折り線、方向、軸ごとの折り列 | `fold_along` | 外形縮小と層の増加が大きく、前の折りが後の折り線を変える | 回転との誤読、層の読みにくさ、異軸の折りの可換性を多解と誤判定すること |
-| `mosaic` | 3×3の紋章を復元する | 行・列、対象線、循環移動方向、順序 | `shift_line` | 対象線全体が動き、交差軸操作の順序依存と完成図を短く追える | 単一軸・独立線の修正、少数の断片からの当て推量、完成形や移動方向の読みにくさ |
+| `maze` | Reach GOAL from START | Route and branch choices | `traverse_edge` | A single route emerges continuously | Long edge sequences or fine visual search |
+| `pipes` | Connect `source` to `sink` without leaks | Route, pieces, and rotation directions | `rotate_piece` | Rotation is large and flow confirms success | Dense connectors or multiple shortest routes |
+| `parking` | Move the target car through the east exit | Blocker order and slide distances | `move_piece` | Each slide creates space for the next | Unnecessary vehicles or long sequences |
+| `packing` | Fill the hole exactly with all pieces | Shape placement `anchor` values | `move_piece` | Each placement fills substantial space | Missing the no-rotation rule or mishandling identical pieces |
+| `lights` | Turn on every cell | Set of cells to press | `toggle_cell` | Each press changes a cross | Commuting presses, color-only dependence, or trivial greediness |
+| `fold` | Match the outline and cover each target cell exactly once with color | Creases, directions, and per-axis folds | `fold_along` | Outline shrinks and layers grow | Confusion with rotation or fold equivalence |
+| `mosaic` | Restore a 3×3 emblem | Axis, line, cyclic direction, and order | `shift_line` | Whole-line motion exposes cross-axis order dependency | Independent-line fixes or unclear imagery |
 
-同値関係の現行例は、`lights` の押下マス集合、`packing` の同形ピースを同一視した形状・配置基点の多重集合、`fold` の異軸の折りの交換、Mosaic Shiftの順序を厳密に区別する `Action` 列です。正式な文字列と版番号は各ジャンルのモジュールを正本とします。
+Current equivalence examples include the pressed-cell set for `lights`; the multiset of shapes and anchors with identical pieces identified for `packing`; commuting cross-axis folds for `fold`; and the strictly ordered `Action` sequence for Mosaic Shift. Each genre module is authoritative for the exact string and version.
 
-## 7. 生成器・ソルバー・採用証拠
+## 7. Generators, solvers, and acceptance evidence
 
-### 必須境界
+Every genre satisfies [`protocol.py`](src/zero_button_game/protocol.py) and is registered in [`registry.py`](src/zero_button_game/registry.py). Process candidates in this order:
 
-全ジャンルは [`protocol.py`](src/zero_button_game/protocol.py) の共通境界を満たし、[`registry.py`](src/zero_button_game/registry.py) へ登録します。候補は次の順で処理します。
+1. Generate deterministically from the seed and preset.
+2. Validate the structure.
+3. Find a shortest or canonical solution.
+4. Replay the solution, including `Action.precondition`.
+5. Calculate difficulty and apply reason-coded quality rejections.
+6. Replay the presentation, then check neutrality, operation correspondence, success timing, and readability.
 
-1. シードとプリセットから候補を決定論的に生成する。
-2. 規則で構造を検証する。
-3. ソルバーで最短解または正規解を求める。
-4. 操作の前提条件（`Action.precondition`）を含めて解答を再生し、目標到達と解の証明を検証する。
-5. 難易度指標を計算し、難易度帯と品質契約に合わない候補を理由コード付きで棄却する。
-6. 表示計画を再生してから描画し、解答公開前の中立性、操作との対応、成功表示の時期、可読下限を検査する。
+Define first whether “one solution” counts literal `Action` sequences or normalized routes, sets, equivalence classes, or covers. Version the `equivalence_policy` across solver, metadata, preset, and tests. If complete enumeration, rank (`gf2_rank`), or bounded exhaustive search cannot prove uniqueness, record the proof scope and limits. Do not count equivalent alternatives arbitrarily as distinct or merge distinct causal solutions merely because they look alike.
 
-### 一意性と同値関係
+Solvers have finite node, state, depth, or equivalent limits. Reject limit overruns, unsolvable or non-unique candidates, invalid structures, illegal solutions, and quality failures with known reason codes. Fail closed on missing or extra preset JSON, type and range errors, and mismatches with the 20 fps grid. If the candidate limit does not yield enough accepted problems, raise `GenerationExhausted`; never substitute an uncertain candidate.
 
-- 「解が1本」の意味を、そのままの `Action` 列で数えるか、正規化した経路・集合・同値類・被覆で数えるかを先に定義する。
-- 同値関係の規則（`equivalence_policy`）には版番号を付け、ソルバー、メタデータ、プリセット、テストで一致させる。
-- 一意性を完全列挙、階数（`gf2_rank`）、範囲を限定した完全探索などで証明できない場合は、証明範囲と上限をメタデータに残す。
-- 標準解と同値な別解を恣意的に多解扱いせず、逆に見た目が同じだけの異なる因果を黙って同一視しない。
+Retain `generation_seed_hex` derived from `master_seed` and `candidate_index`; `problem_sha256` / `solution_sha256`; preset ID, source path, and source-byte hash; solver ID/version, `optimality`, `cost`, operation count, and expanded nodes; uniqueness/equivalence proof and normalized-signature hash; difficulty metrics and `requested_band` / `accepted_band`; and results from replay, neutrality, rendering, and artifact validation.
 
-### 安全側の棄却と探索上限
+Use `audit-quality` to compare `scanned`, `accepted`, `acceptance_rate`, `rejection_reasons`, candidate hashes, metric catalogs, and `audit_sha256` without rendering. Evaluate rejection bias and blinded accepted examples, not acceptance rate alone.
 
-ソルバーにはノード数・状態数・深さなどの有限な探索上限を置きます。上限超過、解なし、多解、構造不正、違法な解答、品質不適合は採用せず、既知の理由コードで棄却します。プリセット台帳の欠落・余分なJSON・型・範囲・20 fps格子の不整合も、安全側に倒して棄却します。候補上限までに必要数を得られなければ `GenerationExhausted` とし、不確かな候補を代用しません。
+## 8. Human calibration
 
-採用候補には少なくとも次の証拠を残します。
+Human evaluation should be blinded: do not reveal source, solver output, title, or `CLEAR`. Record pre-reveal prediction, rule recovery, thinking time relative to `reveal_start`, ability to restate `solve` causality, and success recognition within two seconds of `result`.
 
-- `master_seed`、`candidate_index` から導出できる `generation_seed_hex`、`problem_sha256` / `solution_sha256`。
-- プリセット識別子、参照元のパス、参照元JSONバイト列のSHA-256。
-- ソルバー識別子・版番号・`optimality`・`cost`・操作数・探索ノード数。
-- 利用可能な一意性・同値関係の証明と正規化署名のハッシュ。
-- 難易度指標、`requested_band` / `accepted_band`、品質条件による棄却を通過した事実。
-- 解答再生、中立性、描画契約、生成物検証の結果。
+Before integrating a new genre, run a title-hidden evaluation with at least five people. Require at least 80% (4/5) to recover the goal and primary operation, at least 80% to follow `solve` causality, and everyone to recognize success within two seconds. If two people infer the same wrong rule, revise and retest. If Easy / Medium / target do not separate as intended, retune dependency, branching, near misses, and presentation time as well as operation count.
 
-描画を伴わない候補分布は `audit-quality` で確認し、`scanned`、`accepted`、`acceptance_rate`、`rejection_reasons`、候補ハッシュ、指標一覧、`audit_sha256` を比較します。受入率だけで品質を判断せず、棄却理由の偏りと採用候補の実例も、情報を伏せた評価で確認します。
+Five participants only screens for serious comprehension defects; it does not establish general-audience calibration. Generalized claims require preserved target population, sample size, seeds, conditions, per-band results, and updated preset calibration metadata.
 
-## 8. 人による校正
+## 9. New-genre proposal checklist
 
-人による評価は、ソースコード、ソルバー出力、題字、`CLEAR`を見せず、情報を伏せる条件を基本にします。最低限、次を個別に記録します。
+- [ ] Explain the goal in one sentence and the primary operation in one word.
+- [ ] Infer the completed state or success condition from the still initial state.
+- [ ] Starting from 2–5 typical operations, demonstrate order dependency or interaction.
+- [ ] Make each operation substantially change shape, position, connection, or outline, not just color.
+- [ ] Keep `solve` short and prediction errors causally understandable.
+- [ ] Prove a unique solution or a versioned `equivalence_policy`.
+- [ ] Give generation, solving, and uniqueness checks finite limits.
+- [ ] Separate Easy / Medium / target with multiple metrics.
+- [ ] Keep pre-reveal information solution-independent and legends neutral.
+- [ ] Test color vision, reduced-size display, `frame 0`, and `result`.
+- [ ] Provide distinct causality, not a cosmetic reskin.
+- [ ] Support deterministic fixtures, property, conformance, render, and integration tests.
 
-| 測定 | 質問 / 観察 | 失敗の示唆 |
-|---|---|---|
-| 事前予測 | 解答公開前に、完成状態と最初の主要操作を予測できるか | 目標不明、情報過多、時間不足 |
-| ルール復元 | 「何を動かせるか」「何を作れば成功か」を説明できるか | 凡例不足または説明依存 |
-| 思考時間 | 予測確定時刻と `reveal_start` の差 | 難易度帯に対して短すぎる / 長すぎる |
-| `solve` 追跡 | 視聴後に操作順と因果を再説明できるか | 動きが速い、操作変化が小さい、手順が長い |
-| 成功理解 | `result` 開始から2秒以内に、文字なしで成功を判定できるか | 成功表示が文字や画面上の補助表示だけに依存している、または曖昧 |
+## 10. Integration workflow
 
-新ジャンルの正式統合前には、題字を隠して5名以上で行う評価を最低限の確認基準とし、次を要求します。
+1. **Prototype** rules, operations, goal, equivalence, and representative seeds without rendering.
+2. **Evaluate blind** whether a still problem communicates goal, operation, and prediction target.
+3. **Audit logic** for generation, solving, replay, uniqueness, limits, metrics, and rejection reasons.
+4. **Review rendering** in `VISUAL_DESIGN.md` for neutrality, animation, non-color cues, success timing, and safe area.
+5. **Integrate** by synchronizing presets, plugin, registration, title/audio, schemas, tests, `README.md`, and both design documents, then generate and validate representatives.
 
-- 80%以上（最低5名なら4/5以上）が目標と主要操作を正しく復元する。
-- 80%以上（最低5名なら4/5以上）が `solve` の主要な因果を追跡できる。
-- 全員が `result` 開始後2秒以内に成功を理解する。
-- 同じ誤規則を2名以上が復元した場合は、人数にかかわらず修正して再試験する。
-- Easy / Medium / targetの予測成功率または予測確定時間が意図した順に分かれない場合は、操作数だけでなく依存・分岐・惜しい誤答候補・提示時間を再調整する。
-
-5名の確認基準は重大な読解欠陥を見つけるための最低限であり、一般利用者へ校正済みと主張する根拠にはしません。一般化する場合は対象層、人数、シード、提示条件、難易度帯別の結果を調査記録として保存し、プリセットの校正メタデータを更新します。
-
-## 9. 新ジャンル提案チェックリスト
-
-- [ ] 目標を一文、主要操作を一語で説明できる。
-- [ ] 静止した初期状態から完成形または成功条件を推測できる。
-- [ ] 典型2〜5操作を起点に、順序依存または相互作用を示せる。
-- [ ] 各操作が色以外の形・位置・接続・外形を大きく変える。
-- [ ] `solve` が短く、誤予測の原因を因果的に見せる。
-- [ ] 一意解または版番号付きの `equivalence_policy` を証明できる。
-- [ ] 生成器、ソルバー、一意性検査に有限の探索上限がある。
-- [ ] Easy / Medium / targetを複数の指標で分けられる。
-- [ ] 解答公開前の情報が解に依存せず、凡例が解法を漏らさない。
-- [ ] 色覚、縮小表示、`frame 0`、`result` の可読性を検査できる。
-- [ ] 現行ジャンルの外観だけを変えた焼き直しではなく、異なる予測対象または因果を持つ。
-- [ ] 決定論的なテスト用固定例、性質テスト、プロトコル適合テスト、描画テスト、統合テストを書ける。
-
-## 10. 正式統合の作業手順
-
-1. **試作**: 規則、操作、目標、同値関係、代表シードを描画なしで実装し、2〜5操作の目安から始める。
-2. **情報を伏せた評価**: 静止問題だけで目標・操作・予測対象が復元されるかを確認する。失敗時は規則追加ではなく問題表現またはジャンル自体を見直す。
-3. **論理監査**: 生成器、ソルバー、解答再生、一意性、探索上限、品質条件による棄却を検査し、複数シードの指標分布と棄却理由を保存する。
-4. **描画確認**: `VISUAL_DESIGN.md` に視覚仕様を追加し、中立性、操作アニメーション、色以外の表現、成功表示の時期、安全領域を検査する。
-5. **正式統合**: プリセット、プラグイン、登録処理、シーケンスの題字・音声、スキーマ、テスト、`README.md`、両デザイン文書を同期し、代表生成と検証を通す。
-
-`GAME_DESIGN.md`だけを書き換えて `ruleset`、操作数、難易度帯、思考時間、同値関係、採用条件を変更してはいけません。該当するプリセット、プラグイン・コード、スキーマ、テストを必ず同じ変更で更新し、見え方に影響する変更は `VISUAL_DESIGN.md`、利用方法に影響する変更は `README.md` も同期します。
+Never change a `ruleset`, operation count, difficulty band, thinking time, equivalence relation, or acceptance condition by editing this document alone. Update all relevant implementation sources in the same change.
