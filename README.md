@@ -131,22 +131,6 @@ The loader rereads JSON on every use and records the source-byte SHA-256 in stan
 - **All of `output/` is excluded from Git.** This covers media, metadata, manifests, JSON/JSONL, and temporary staging. Reproducibility comes from seeds, presets, code, and outputs such as `audit-quality` stdout.
 - `--keep-frames` is for investigation. A 720×720 RGB PPM is about 1.5 MiB per frame, so normally omit it.
 
-## Current standards
-
-| Genre                   | Current preset                                          | Standalone | Three-problem sequence   | Thinking time Easy / Medium / Hard (seconds) |
-| ----------------------- | ------------------------------------------------------- | ---------- | ------------------------ | -------------------------------------------: |
-| `maze`                  | [`maze-{easy,medium,target}.json`](presets/current/)    | GIF / MP4  | MP4 (with/without audio) |                              2.5 / 2.5 / 3.5 |
-| `pipes`                 | [`pipes-{easy,medium,target}.json`](presets/current/)   | GIF / MP4  | MP4 (with/without audio) |                              4.0 / 6.0 / 8.0 |
-| `parking`               | [`parking-{easy,medium,target}.json`](presets/current/) | GIF / MP4  | MP4 (with/without audio) |                              4.0 / 4.0 / 8.0 |
-| `packing`               | [`packing-{easy,medium,target}.json`](presets/current/) | GIF / MP4  | MP4 (with/without audio) |                              4.0 / 4.0 / 8.0 |
-| `lights`                | [`lights-{easy,medium,target}.json`](presets/current/)  | GIF / MP4  | MP4 (with/without audio) |                              4.0 / 6.0 / 8.0 |
-| `fold`                  | [`fold-{easy,medium,target}.json`](presets/current/)    | GIF / MP4  | MP4 (with/without audio) |                              4.0 / 6.0 / 6.0 |
-| `mosaic` (MOSAIC SHIFT) | [`mosaic-{easy,medium,target}.json`](presets/current/)  | GIF / MP4  | MP4 (with/without audio) |                              4.0 / 6.0 / 8.0 |
-
-Internal bands are `easy` / `medium` / `target`; only viewer-facing labels are `EASY` / `MEDIUM` / `HARD`. Standalone output supports `--format gif`, `--format mp4`, or `--format gif,mp4`; three-problem sequences are MP4-only and support `--audio on` / `--audio off`.
-
-Thinking time runs from `frame 0` to `reveal_start`. [src/zero_button_game](src/zero_button_game/) and [presets/current](presets/current/) are authoritative for each plugin's ruleset, `Action`, score range, and calibration metadata.
-
 ## Documentation map
 
 | Document                             | Role                                               |
