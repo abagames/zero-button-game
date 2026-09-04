@@ -21,10 +21,6 @@ gifsicle --version
 PYTHONPATH=src python3 -m zero_button_game --help
 ```
 
-`PYTHONPATH=src` adds the uninstalled `src/` tree to Python's import path. `-m` is Python's standard option for running the package's [`__main__.py`](src/zero_button_game/__main__.py) as a module.
-
-The old `PYTHONPATH=src python3 -m puzzle_gif` CLI has been replaced by `PYTHONPATH=src python3 -m zero_button_game`. No alias, shim, or re-export is provided for the old package.
-
 ### 2. Generate representative sequences for all seven genres
 
 Choose a new `--output` directory that does not overlap existing artifacts:
@@ -148,21 +144,19 @@ The loader rereads JSON on every use and records the source-byte SHA-256 in stan
 
 ## Current standards
 
-| Genre                   | Current preset                                          | Standalone | Three-problem sequence   |                    Thinking time Easy / Medium / Hard (seconds) |
-| ----------------------- | ------------------------------------------------------- | ---------- | ------------------------ | --------------------------------------------------------------: |
-| `maze`                  | [`maze-{easy,medium,target}.json`](presets/current/)    | GIF / MP4  | MP4 (with/without audio) |                                                 2.5 / 2.5 / 3.5 |
-| `pipes`                 | [`pipes-{easy,medium,target}.json`](presets/current/)   | GIF / MP4  | MP4 (with/without audio) |                                                 4.0 / 6.0 / 8.0 |
-| `parking`               | [`parking-{easy,medium,target}.json`](presets/current/) | GIF / MP4  | MP4 (with/without audio) |                                                 4.0 / 4.0 / 8.0 |
-| `packing`               | [`packing-{easy,medium,target}.json`](presets/current/) | GIF / MP4  | MP4 (with/without audio) |                                                 4.0 / 4.0 / 8.0 |
-| `lights`                | [`lights-{easy,medium,target}.json`](presets/current/)  | GIF / MP4  | MP4 (with/without audio) | 4.0 / 6.0 (uncalibrated candidate) / 8.0 (existing calibration) |
-| `fold`                  | [`fold-{easy,medium,target}.json`](presets/current/)    | GIF / MP4  | MP4 (with/without audio) |                                                 4.0 / 6.0 / 6.0 |
-| `mosaic` (MOSAIC SHIFT) | [`mosaic-{easy,medium,target}.json`](presets/current/)  | GIF / MP4  | MP4 (with/without audio) |                   4.0 / 6.0 / 8.0 (uncalibrated initial values) |
+| Genre                   | Current preset                                          | Standalone | Three-problem sequence   | Thinking time Easy / Medium / Hard (seconds) |
+| ----------------------- | ------------------------------------------------------- | ---------- | ------------------------ | -------------------------------------------: |
+| `maze`                  | [`maze-{easy,medium,target}.json`](presets/current/)    | GIF / MP4  | MP4 (with/without audio) |                              2.5 / 2.5 / 3.5 |
+| `pipes`                 | [`pipes-{easy,medium,target}.json`](presets/current/)   | GIF / MP4  | MP4 (with/without audio) |                              4.0 / 6.0 / 8.0 |
+| `parking`               | [`parking-{easy,medium,target}.json`](presets/current/) | GIF / MP4  | MP4 (with/without audio) |                              4.0 / 4.0 / 8.0 |
+| `packing`               | [`packing-{easy,medium,target}.json`](presets/current/) | GIF / MP4  | MP4 (with/without audio) |                              4.0 / 4.0 / 8.0 |
+| `lights`                | [`lights-{easy,medium,target}.json`](presets/current/)  | GIF / MP4  | MP4 (with/without audio) |                              4.0 / 6.0 / 8.0 |
+| `fold`                  | [`fold-{easy,medium,target}.json`](presets/current/)    | GIF / MP4  | MP4 (with/without audio) |                              4.0 / 6.0 / 6.0 |
+| `mosaic` (MOSAIC SHIFT) | [`mosaic-{easy,medium,target}.json`](presets/current/)  | GIF / MP4  | MP4 (with/without audio) |                              4.0 / 6.0 / 8.0 |
 
 Internal bands are `easy` / `medium` / `target`; only viewer-facing labels are `EASY` / `MEDIUM` / `HARD`. Standalone output supports `--format gif`, `--format mp4`, or `--format gif,mp4`; three-problem sequences are MP4-only and support `--audio on` / `--audio off`.
 
-Thinking time runs from `frame 0` to `reveal_start`. [src/zero_button_game](src/zero_button_game/) and [presets/current](presets/current/) are authoritative for each plugin's ruleset, `Action`, score range, and calibration metadata. See [VISUAL_DESIGN.md](VISUAL_DESIGN.md) for color, layout, and visual acceptance requirements.
-
-Mosaic Shift restores a 3×3 emblem with cyclic row and column shifts. See [GAME_DESIGN.md](GAME_DESIGN.md) for difficulty and solution rules and [VISUAL_DESIGN.md](VISUAL_DESIGN.md) for presentation requirements.
+Thinking time runs from `frame 0` to `reveal_start`. [src/zero_button_game](src/zero_button_game/) and [presets/current](presets/current/) are authoritative for each plugin's ruleset, `Action`, score range, and calibration metadata.
 
 ## Documentation map
 
