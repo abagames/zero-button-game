@@ -1,25 +1,14 @@
 # Zero Button Game
 
-Zero Button Game is a production environment for generating and validating deterministic puzzle GIFs/MP4s for maze, pipes, parking, packing, lights, fold, and mosaic, plus three-problem Easy → Medium → Hard MP4s with optional audio. The CLI, generation pipeline, and metadata use the internal bands `easy` / `medium` / `target`; only the sequence's viewer-facing display renders `target` as HARD.
+Zero Button Game is a production environment for generating and validating deterministic puzzle GIFs/MP4s for maze, pipes, parking, packing, lights, fold, and mosaic, plus three-problem Easy → Medium → Hard MP4s with optional audio.
 
 ## Quick start
 
 ### 1. Requirements
 
-- CPython 3.12 or later (validated with 3.12.3)
-- FFmpeg / ffprobe (validated with 6.1.1, including `libx264`)
-- gifsicle (validated with 1.94)
-- No external Python package dependencies. Runtime checks cover system tools such as FFmpeg, ffprobe, ImageMagick, and gifsicle.
-
-Run the following commands from the project root:
-
-```bash
-python3 --version
-ffmpeg -version
-ffprobe -version
-gifsicle --version
-PYTHONPATH=src python3 -m zero_button_game --help
-```
+- CPython 3.12 or later
+- FFmpeg / ffprobe
+- gifsicle
 
 ### 2. Generate representative sequences for all seven genres
 
